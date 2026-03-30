@@ -1,0 +1,76 @@
+[
+  {
+    "name": "Arjun Kumar",
+    "email": "arjun.k@example.com",
+    "password": "password123",
+    "trade": "Electrician",
+    "experience_years": 2,
+    "location": "Mumbai",
+    "resume_url": "",
+    "skills": [
+      {"name": "wiring", "experience_years": 2},
+      {"name": "electrical maintenance", "experience_years": 2},
+      {"name": "troubleshooting", "experience_years": 1},
+      {"name": "panel wiring", "experience_years": 1}
+    ]
+  },
+  {
+    "name": "Ravi Yadav",
+    "email": "ravi.y@example.com",
+    "password": "password123",
+    "trade": "Fitter",
+    "experience_years": 3,
+    "location": "Pune",
+    "resume_url": "",
+    "skills": [
+      {"name": "machining", "experience_years": 3},
+      {"name": "welding", "experience_years": 2},
+      {"name": "assembly", "experience_years": 3},
+      {"name": "blueprint reading", "experience_years": 2}
+    ]
+  },
+  {
+    "name": "Sunil Sharma",
+    "email": "sunil.s@example.com",
+    "password": "password123",
+    "trade": "Welder",
+    "experience_years": 1,
+    "location": "Nashik",
+    "resume_url": "",
+    "skills": [
+      {"name": "arc welding", "experience_years": 1},
+      {"name": "tig welding", "experience_years": 1},
+      {"name": "fabrication", "experience_years": 1}
+    ]
+  },
+  {
+    "name": "Prakash Singh",
+    "email": "prakash.s@example.com",
+    "password": "password123",
+    "trade": "Machinist",
+    "experience_years": 5,
+    "location": "Nagpur",
+    "resume_url": "",
+    "skills": [
+      {"name": "cnc operations", "experience_years": 4},
+      {"name": "lathe machine", "experience_years": 5},
+      {"name": "precision measurement", "experience_years": 5},
+      {"name": "milling", "experience_years": 3}
+    ]
+  },
+  {
+    "name": "Manoj Verma",
+    "email": "manoj.v@example.com",
+    "password": "password123",
+    "trade": "Draftsman (Mechanical)",
+    "experience_years": 2,
+    "location": "Thane",
+    "resume_url": "",
+    "skills": [
+      {"name": "autocad", "experience_years": 2},
+      {"name": "drafting", "experience_years": 2},
+      {"name": "3d modeling", "experience_years": 1},
+      {"name": "mechanical design", "experience_years": 2}
+    ]
+  }
+]

@@ -1,0 +1,7 @@
+.env
+atsenv/
+__pycache__/
+*.pyc
+chroma_db_new/
+mongo_data/
+.vscode/

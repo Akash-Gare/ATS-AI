@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Your Profile - ATS Connect</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #f3f2ef;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 15px 0;
+    }
+    .navbar-brand {
+      color: #0a66c2 !important;
+      font-weight: 700;
+      font-size: 1.6rem;
+    }
+    .reg-container {
+      max-width: 800px;
+      margin: 40px auto;
+    }
+    .card-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 40px;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    .form-label {
+      font-weight: 600;
+      color: #191919;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+    .form-control, .form-select {
+      border-radius: 4px;
+      border: 1px solid #00000099;
+      padding: 10px;
+    }
+    .btn-primary {
+      background-color: #0a66c2;
+      border: none;
+      border-radius: 24px;
+      padding: 10px 30px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .btn-outline {
+      border: 1px solid #0a66c2;
+      color: #0a66c2;
+      background: transparent;
+      border-radius: 24px;
+      font-weight: 600;
+      padding: 8px 20px;
+    }
+    .btn-outline:hover {
+      background-color: #e6f2fe;
+    }
+    .entry-box {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      background: #f9f9f9;
+      position: relative;
+    }
+    .remove-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #dc3545;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="home.html"><i class="fas fa-briefcase"></i> ATS Connect</a>
+    </div>
+  </nav>
+
+  <div class="container reg-container">
+    <div class="text-center mb-5">
+      <h2 style="font-weight: 600; color: #191919;">Join ATS Connect and build your career</h2>
+      <p class="text-muted">Fill out your profile to start receiving AI-driven job matches.</p>
+    </div>
+
+    <div class="card-box">
+      
+      <!-- Personal Info -->
+      <div class="section-title"><i class="fas fa-user me-2"></i> Personal Information</div>
+      <div class="row g-3 mb-5">
+        <div class="col-md-6">
+          <label class="form-label">Full Name</label>
+          <input id="fullName" class="form-control" type="text" placeholder="e.g. John Doe">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email Address</label>
+          <input id="email" class="form-control" type="email" placeholder="e.g. john@example.com">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Password</label>
+          <input id="password" type="password" class="form-control" placeholder="••••••••">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Mobile Number</label>
+          <input id="mobile" class="form-control" placeholder="e.g. 9876543210">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Date of Birth</label>
+          <input id="dob" type="date" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">City</label>
+          <input id="city" class="form-control" placeholder="e.g. Mumbai">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">State</label>
+          <input id="state" class="form-control" placeholder="e.g. Maharashtra">
+        </div>
+      </div>
+
+      <!-- Education Section -->
+      <div class="section-title d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-graduation-cap me-2"></i> Education</span>
+        <button class="btn btn-sm btn-outline" onclick="addEducation()">+ Add Education</button>
+      </div>
+      <div id="education-container" class="mb-5">
+        <!-- Education entries will be added here -->
+      </div>
+
+      <!-- Experience Section -->
+      <div class="section-title d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-briefcase me-2"></i> Experience</span>
+        <button class="btn btn-sm btn-outline" onclick="addExperience()">+ Add Experience</button>
+      </div>
+      <div id="experience-container" class="mb-5">
+        <!-- Experience entries will be added here -->
+      </div>
+
+      <!-- Preferences -->
+      <div class="section-title"><i class="fas fa-heart me-2"></i> Job Preferences</div>
+      <div class="row g-3 mb-5">
+        <div class="col-md-6">
+          <label class="form-label">Expected Monthly Salary (₹)</label>
+          <input id="expSalary" class="form-control" type="number" placeholder="e.g. 25000">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Preferred Locations</label>
+          <input id="prefLoc" class="form-control" placeholder="e.g. Pune, Mumbai, Remote">
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <button id="regBtn" class="btn btn-primary w-100 mb-3" onclick="register()">Agree & Join</button>
+        <p class="small text-muted">Already on ATS Connect? <a href="login.html" class="text-decoration-none">Sign in</a></p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function addEducation() {
+      const container = document.getElementById("education-container");
+      const id = Date.now();
+      const html = `
+        <div class="entry-box education-entry" id="edu_${id}">
+          <i class="fas fa-trash remove-btn" onclick="document.getElementById('edu_${id}').remove()"></i>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Education Type</label>
+              <select class="form-select edu-type">
+                <option>10th Standard</option>
+                <option>12th Standard</option>
+                <option>ITI</option>
+                <option>Diploma</option>
+                <option>Degree</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Institute Name</label>
+              <input class="form-control edu-name" placeholder="School/College Name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Trade / Stream</label>
+              <input class="form-control edu-trade" placeholder="e.g. Electrician / Science">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Passing Year</label>
+              <input class="form-control edu-year" type="number" placeholder="2022">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Board</label>
+              <input class="form-control edu-board" placeholder="e.g. SSC/HSC">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Key Skills (Comma separated)</label>
+              <input class="form-control edu-skills" placeholder="e.g. Wiring, Maintenance, Safety">
+            </div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function addExperience() {
+      const container = document.getElementById("experience-container");
+      const id = Date.now();
+      const html = `
+        <div class="entry-box experience-entry" id="exp_${id}">
+          <i class="fas fa-trash remove-btn" onclick="document.getElementById('exp_${id}').remove()"></i>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Job Title</label>
+              <input class="form-control exp-title" placeholder="e.g. CNC Operator">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Company Name</label>
+              <input class="form-control exp-company" placeholder="e.g. Tata Motors">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Job Description</label>
+              <textarea class="form-control exp-desc" rows="2" placeholder="Briefly describe your role..."></textarea>
+            </div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+
+    // Initialize with one education entry
+    addEducation();
+
+    function register() {
+      const btn = document.getElementById("regBtn");
+      
+      const payload = {
+        userId: document.getElementById("email").value, // Using email as userId for now
+        fullName: document.getElementById("fullName").value,
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+        mobile: document.getElementById("mobile").value,
+        dob: document.getElementById("dob").value,
+        city: document.getElementById("city").value,
+        state: document.getElementById("state").value,
+        education: [],
+        experience: [],
+        preferences: {
+          expectedSalary: document.getElementById("expSalary").value,
+          preferredLocations: document.getElementById("prefLoc").value
+        },
+        isProfileComplete: true
+      };
+
+      // Gather Education
+      document.querySelectorAll(".education-entry").forEach(el => {
+        payload.education.push({
+          educationType: el.querySelector(".edu-type").value,
+          instituteName: el.querySelector(".edu-name").value,
+          trade: el.querySelector(".edu-trade").value,
+          passingYear: parseInt(el.querySelector(".edu-year").value || 0),
+          boardName: el.querySelector(".edu-board").value,
+          skills: el.querySelector(".edu-skills").value.split(",").map(s => s.trim()).filter(s => s !== "")
+        });
+      });
+
+      // Gather Experience
+      document.querySelectorAll(".experience-entry").forEach(el => {
+        payload.experience.push({
+          jobTitle: el.querySelector(".exp-title").value,
+          companyName: el.querySelector(".exp-company").value,
+          jobDescription: el.querySelector(".exp-desc").value,
+          isCurrentlyWorking: false
+        });
+      });
+
+      if (!payload.fullName || !payload.email || !payload.password) {
+        alert("Name, Email, and Password are required!");
+        return;
+      }
+
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating Profile...';
+      btn.disabled = true;
+
+      fetch("/students/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("Registration Successful!");
+        window.location.href = "login.html";
+      })
+      .catch(e => {
+        btn.innerHTML = 'Agree & Join';
+        btn.disabled = false;
+        alert("Registration Failed. Please try again.");
+      });
+    }
+  </script>
+</body>
+</html>

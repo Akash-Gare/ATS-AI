@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Employer Dashboard - ATS Connect</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #f3f2ef;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      padding: 12px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar-brand {
+      color: #0a66c2 !important;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .dashboard-container {
+      max-width: 1100px;
+      margin: 30px auto;
+    }
+
+    .card-box {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .job-card {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: background-color 0.2s;
+    }
+
+    .job-card:hover {
+      background-color: #f9f9f9;
+    }
+
+    .job-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0a66c2;
+      text-decoration: none;
+    }
+
+    .job-title:hover {
+      text-decoration: underline;
+    }
+
+    .company-name {
+      font-size: 0.95rem;
+      color: #191919;
+      font-weight: 400;
+    }
+
+    .job-meta {
+      font-size: 0.85rem;
+      color: #666666;
+      margin-top: 4px;
+    }
+
+    .btn-primary {
+      background-color: #0a66c2;
+      border: none;
+      border-radius: 24px;
+      padding: 8px 20px;
+      font-weight: 600;
+    }
+
+    .btn-outline {
+      border: 1px solid #0a66c2;
+      color: #0a66c2;
+      border-radius: 24px;
+      padding: 8px 20px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .btn-outline:hover {
+      background-color: #e6f2fe;
+    }
+
+    .sidebar-heading {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="home.html"><i class="fas fa-briefcase"></i> ATS Connect <span
+          style="font-size: 0.9rem; font-weight: 400; color: #666;">| Jobs</span></a>
+      <div class="ms-auto">
+        <a href="login.html" class="btn btn-outline me-2">Sign in</a>
+        <a href="student_register.html" class="btn btn-primary">Sign up</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container dashboard-container">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-3">
+        <div class="card-box text-center">
+          <div
+            style="width: 72px; height: 72px; background: #e0e0e0; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-search fa-2x text-muted"></i>
+          </div>
+          <h5 class="mb-1">Job Opportunities</h5>
+          <p class="text-muted small">Explore recent job postings and match your skills using our AI.</p>
+          <hr>
+          <div class="text-start">
+            <p class="small mb-2"><i class="fas fa-briefcase me-2"></i> All Available Roles</p>
+            <p class="small mb-2"><i class="fas fa-industry me-2"></i> Find Your Trade</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-md-9">
+        <div class="card-box">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Recent Job Postings</h4>
+            <a href="company_post_job.html" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Post a Job</a>
+          </div>
+          <div id="jobsList">
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-2 text-muted">Loading available jobs...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Details Modal -->
+  <div class="modal fade" id="jobDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-0 pb-0">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-0 px-4 pb-4">
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+              <h3 id="modalJobTitle" class="fw-bold text-primary mb-1">Job Title</h3>
+              <h5 id="modalCompany" class="text-dark mb-1">Company</h5>
+              <p class="text-muted small mb-0"><i class="fas fa-map-marker-alt me-1"></i> <span id="modalLocation">Location</span></p>
+            </div>
+            <img id="modalCompanyLogo" src="" width="64" class="rounded border shadow-sm">
+          </div>
+          
+          <div class="row mb-4">
+            <div class="col-sm-4 mb-2"><div class="p-3 bg-light rounded text-center"><i class="fas fa-briefcase d-block text-muted mb-1"></i><strong id="modalExp"></strong> <small>Exp</small></div></div>
+            <div class="col-sm-4 mb-2"><div class="p-3 bg-light rounded text-center"><i class="fas fa-clock d-block text-muted mb-1"></i><strong id="modalType"></strong> <small>Type</small></div></div>
+            <div class="col-sm-4 mb-2"><div class="p-3 bg-light rounded text-center"><i class="fas fa-dollar-sign d-block text-muted mb-1"></i><strong id="modalSalary"></strong> <small>Salary</small></div></div>
+          </div>
+
+          <h6 class="fw-bold border-bottom pb-2 mb-3">Required Skills</h6>
+          <div id="modalSkills" class="mb-4"></div>
+
+          <h6 class="fw-bold border-bottom pb-2 mb-3">Job Description</h6>
+          <div id="modalDescription" class="text-muted" style="font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;"></div>
+        </div>
+        <div class="modal-footer justify-content-end bg-light border-0">
+          <a href="login.html" id="modalApplyBtn" class="btn btn-primary px-5 rounded-pill fw-bold">Log in to Apply</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let allJobs = [];
+
+    fetch("/jobs")
+      .then(res => res.json())
+      .then(data => {
+        const jobsList = document.getElementById("jobsList");
+
+        if (data.length === 0) {
+          jobsList.innerHTML = `
+            <div class="text-center py-5">
+              <i class="fas fa-search fa-3x text-muted mb-3"></i>
+              <h5>No jobs available right now</h5>
+              <p class="text-muted">Check back later for new opportunities!</p>
+            </div>
+          `;
+          return;
+        }
+
+        jobsList.innerHTML = "";
+        allJobs = data.reverse();
+        
+        allJobs.forEach((job, index) => {
+          const div = document.createElement("div");
+          div.className = "job-card";
+          div.innerHTML = `
+            <div class="d-flex align-items-start justify-content-between">
+              <div>
+                <a href="javascript:void(0)" onclick="viewJobDetails(${index})" class="job-title">${job.jobTitle || job.job_title}</a>
+                <div class="company-name">${job.company || "Unknown Company"}</div>
+                <div class="job-meta">
+                  <span class="me-3"><i class="fas fa-map-marker-alt me-1"></i> ${job.location || "N/A"}</span>
+                  <span class="me-3"><i class="fas fa-history me-1"></i> ${job.jobType || 'Full-time'}</span>
+                  <span><i class="fas fa-briefcase me-1"></i> ${job.min_experience || job.experienceLevel || 0} years exp</span>
+                </div>
+                <div class="mt-2 small text-muted">
+                  <strong>Skills:</strong> ${(job.requiredSkills || job.required_skills || []).join(", ")}
+                </div>
+              </div>
+              <div class="text-end">
+                <button onclick="viewJobDetails(${index})" class="btn btn-outline-primary btn-sm px-4 rounded-pill fw-bold">View Job</button>
+              </div>
+            </div>
+          `;
+          jobsList.appendChild(div);
+        });
+      })
+      .catch(err => {
+        document.getElementById("jobsList").innerHTML = `<div class="alert alert-danger">Error loading jobs. Please try again.</div>`;
+      });
+
+    function viewJobDetails(index) {
+       const job = allJobs[index];
+       document.getElementById("modalJobTitle").innerText = job.job_title || job.jobTitle || 'Untitled';
+       document.getElementById("modalCompany").innerText = job.company || 'Unknown Company';
+       document.getElementById("modalLocation").innerText = job.location || 'N/A';
+       document.getElementById("modalCompanyLogo").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company || 'Co')}&background=random&color=fff&size=64&rounded=true`;
+       
+       document.getElementById("modalExp").innerText = (job.experienceLevel || job.min_experience || 0) + "+";
+       document.getElementById("modalType").innerText = job.jobType || 'Full-time';
+       document.getElementById("modalSalary").innerText = job.salary || job.salaryRange || 'Competitive';
+
+       const skills = (job.requiredSkills || job.required_skills || []);
+       document.getElementById("modalSkills").innerHTML = skills.map(s => `<span class="badge bg-secondary me-1 mb-1">${s}</span>`).join('');
+       
+       document.getElementById("modalDescription").innerText = job.description || job.jobDescription || 'No description provided.';
+
+       const modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
+       modal.show();
+    }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ATS Connect - Welcome</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #f3f2ef;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      padding: 15px 0;
+    }
+
+    .navbar-brand {
+      color: #0a66c2 !important;
+      font-weight: 700;
+      font-size: 1.6rem;
+      letter-spacing: -0.5px;
+    }
+
+    .login-container {
+      max-width: 1000px;
+      margin: 60px auto;
+    }
+
+    .card-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 40px;
+      height: 100%;
+      transition: transform 0.2s;
+    }
+
+    .card-box:hover {
+      transform: translateY(-2px);
+    }
+
+    .login-heading {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 25px;
+    }
+
+    .form-control {
+      padding: 12px 15px;
+      border-radius: 6px;
+      border: 1px solid #00000099;
+      margin-bottom: 15px;
+    }
+
+    .form-control:focus {
+      border-color: #0a66c2;
+      box-shadow: none;
+      outline: 1px solid #0a66c2;
+    }
+
+    .floating-label {
+      font-size: 0.85rem;
+      color: #00000099;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background-color: #0a66c2;
+      border: none;
+      border-radius: 24px;
+      padding: 12px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: #004182;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid #0a66c2;
+      color: #0a66c2;
+      border-radius: 24px;
+      padding: 12px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+
+    .btn-outline:hover {
+      background-color: #e6f2fe;
+      color: #0a66c2;
+    }
+
+    .join-link {
+      color: #0a66c2;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .join-link:hover {
+      text-decoration: underline;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 20px 0;
+      color: #00000099;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #e0dfdc;
+    }
+
+    .divider:not(:empty)::before {
+      margin-right: .25em;
+    }
+
+    .divider:not(:empty)::after {
+      margin-left: .25em;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container">
+      <a class="navbar-brand" href="home.html"><i class="fas fa-briefcase"></i> ATS Connect</a>
+    </div>
+  </nav>
+
+  <div class="container login-container">
+    <div class="text-center mb-5">
+      <h1 style="font-size: 2.5rem; font-weight: 300; color: #8f5849;">Welcome to your professional community</h1>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+
+      <!-- Student Login Card -->
+      <div class="col-md-6 col-lg-5">
+        <div class="card-box">
+          <h2 class="login-heading">Sign in</h2>
+          <p class="text-muted mb-4">Stay updated on your professional world</p>
+
+          <div class="mb-2">
+            <div class="floating-label">Email</div>
+            <input id="studentEmail" class="form-control" type="email" placeholder="Email or phone number">
+          </div>
+
+          <div class="mb-4">
+            <div class="floating-label">Password</div>
+            <input id="studentPassword" type="password" class="form-control" placeholder="Password">
+          </div>
+
+          <button class="btn btn-primary w-100" onclick="studentLogin()">
+            Sign in
+          </button>
+
+          <div class="text-center mt-4">
+            New to ATS Connect? <a href="student_register.html" class="join-link">Sign up</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function studentLogin() {
+      const email = document.getElementById("studentEmail").value;
+      const password = document.getElementById("studentPassword").value;
+      const btn = document.querySelector(".btn-primary");
+
+      if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+      }
+
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
+
+      fetch("/students/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = `student_dashboard.html?id=${data.student_id}`;
+          } else {
+            btn.innerHTML = 'Sign in';
+            alert("We couldn't find an account matching those credentials.");
+          }
+        })
+        .catch(e => {
+          btn.innerHTML = 'Sign in';
+          alert("Server connection failed.");
+        });
+    }
+  </script>
+
+</body>
+
+</html>

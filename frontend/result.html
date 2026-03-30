@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ATS Connect - Application Results</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #f3f2ef;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      padding: 15px 0;
+    }
+
+    .navbar-brand {
+      color: #0a66c2 !important;
+      font-weight: 700;
+      font-size: 1.6rem;
+      letter-spacing: -0.5px;
+    }
+
+    .result-container {
+      max-width: 800px;
+      margin: 40px auto;
+    }
+
+    .card-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, #0a66c2 0%, #0073b1 100%);
+      padding: 40px;
+      color: white;
+      text-align: center;
+    }
+
+    .hero-banner h1 {
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .score-circle {
+      width: 140px;
+      height: 140px;
+      background: white;
+      border-radius: 50%;
+      margin: 20px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      border: 8px solid #e6f2fe;
+    }
+
+    .score-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #0a66c2;
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .badge-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      padding: 20px 30px;
+      border-bottom: 1px solid #e0dfdc;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-title {
+      flex: 1;
+      font-weight: 600;
+      color: #191919;
+      font-size: 1.1rem;
+    }
+
+    .stat-desc {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .stat-score {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0a66c2;
+      background: #e6f2fe;
+      padding: 5px 15px;
+      border-radius: 8px;
+    }
+
+    .feedback-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #0a66c2;
+      padding: 20px;
+      margin: 30px;
+      border-radius: 4px 8px 8px 4px;
+      font-size: 1.05rem;
+      color: #191919;
+      line-height: 1.6;
+    }
+
+    .action-btn {
+      background-color: transparent;
+      border: 1px solid #00000099;
+      border-radius: 24px;
+      font-weight: 600;
+      padding: 10px 24px;
+      color: #666;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background-color: #e9ecef;
+      color: #191919;
+    }
+
+    /* Configurable Feedback Colors */
+    .theme-strong .hero-banner {
+      background: linear-gradient(135deg, #057a55, #046c4e);
+    }
+
+    .theme-strong .score-circle {
+      border-color: #def7ec;
+    }
+
+    .theme-strong .score-val {
+      color: #057a55;
+    }
+
+    .theme-strong .stat-score {
+      color: #057a55;
+      background: #def7ec;
+    }
+
+    .theme-strong .feedback-box {
+      border-left-color: #057a55;
+    }
+
+    .theme-weak .hero-banner {
+      background: linear-gradient(135deg, #c81e1e, #b91c1c);
+    }
+
+    .theme-weak .score-circle {
+      border-color: #fde8e8;
+    }
+
+    .theme-weak .score-val {
+      color: #c81e1e;
+    }
+
+    .theme-weak .stat-score {
+      color: #c81e1e;
+      background: #fde8e8;
+    }
+
+    .theme-weak .feedback-box {
+      border-left-color: #c81e1e;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container pb-2 pt-2">
+      <a class="navbar-brand" id="navHome" href="#"><i class="fas fa-briefcase"></i> ATS Connect</a>
+    </div>
+  </nav>
+
+  <div class="container result-container" id="mainWrapper">
+
+    <div class="card-box" id="resultCard" style="display: none;">
+
+      <div class="hero-banner">
+        <h1 id="statusHeading">Application Analyzed</h1>
+        <p style="opacity: 0.9;">Your technical data and assessment responses have been successfully evaluated.</p>
+
+        <div class="score-circle">
+          <div class="score-val" id="finalScore">--%</div>
+          <div class="score-label">Final ATS Match</div>
+        </div>
+
+        <div id="feedbackBadge" style="font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px;">...</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-title">
+          <i class="fas fa-code text-primary me-2"></i> Foundation ATS Match
+          <!-- <div class="stat-desc">Your Profile Match (60%) + Skill Fit (30%) + Ext (10%)</div> -->
+        </div>
+        <div class="stat-score" id="jobMatchScore">--%</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-title">
+          <i class="fas fa-robot text-primary me-2"></i> Technical Interview Grading
+          <!-- <div class="stat-desc">LLM evaluated correctness and logical completeness vs ideal solutions.</div> -->
+        </div>
+        <div class="stat-score" id="interviewScore">--%</div>
+      </div>
+
+      <div class="feedback-box" id="feedbackText">
+        <i class="fas fa-quote-left text-muted me-2"></i>
+        <span id="detailedFeedback">Waiting for feedback...</span>
+      </div>
+
+      <div class="text-center p-4">
+        <button class="action-btn" id="returnFeedBtn">
+          <i class="fas fa-arrow-left me-2"></i> Return to Feed
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="text-center my-5 py-5 text-muted">
+      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; margin-bottom: 20px;"></div>
+      <h4>Finalizing Application...</h4>
+      <p>Please wait while we sync your grades to the ATS.</p>
+    </div>
+
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const interviewId = urlParams.get("id");
+
+    fetch(`/interview/result/${interviewId}`)
+      .then(res => res.json())
+      .then(data => {
+        const studentId = data.student_id;
+
+        // Set up navigation
+        document.getElementById("navHome").href = `student_dashboard.html?id=${studentId}`;
+        document.getElementById("returnFeedBtn").onclick = () => {
+          location.href = `student_dashboard.html?id=${studentId}`;
+        };
+
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("resultCard").style.display = "block";
+
+        // Set numbers
+        document.getElementById("finalScore").innerText = data.final_score + "%";
+        document.getElementById("jobMatchScore").innerText = data.job_match_score + "%";
+        document.getElementById("interviewScore").innerText = data.interview_score + "%";
+
+        // Parse feedback logic
+        const wrapper = document.getElementById("mainWrapper");
+        const feedback = data.feedback || "";
+
+        document.getElementById("feedbackBadge").innerText = feedback;
+
+        if (feedback.includes("Strong")) {
+          wrapper.classList.add("theme-strong");
+          document.getElementById("detailedFeedback").innerText = "Excellent performance! You surpassed the technical baselines required for this role. The employer will be directly notified of your strong match.";
+        }
+        else if (feedback.includes("Weak")) {
+          wrapper.classList.add("theme-weak");
+          document.getElementById("detailedFeedback").innerText = "Unfortunately, your technical evaluation or core skill mapping did not meet the exact required skills by this employer's parameters. We recommend brushing up and trying again.";
+        }
+        else {
+          // Average / Good (Default Blue Theme)
+          document.getElementById("detailedFeedback").innerText = "Solid effort. You hold overlapping traits with the job requirements. While there is room for improvement on the technical grading, your profile has been submitted for secondary review!";
+        }
+      })
+      .catch(e => {
+        document.getElementById("loader").innerHTML = `<h4 class="text-danger">Failed to connect to the database</h4>`;
+      });
+  </script>
+
+</body>
+
+</html>
