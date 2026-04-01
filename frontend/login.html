@@ -165,7 +165,10 @@
           </div>
 
           <div class="mb-4">
-            <div class="floating-label">Password</div>
+            <div class="floating-label d-flex justify-content-between">
+              <span>Password</span>
+              <a href="#" class="join-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal" style="font-size: 0.85rem;">Forgot password?</a>
+            </div>
             <input id="studentPassword" type="password" class="form-control" placeholder="Password">
           </div>
 
@@ -179,6 +182,59 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg p-3">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="forgotTitle">Reset Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeForgotModalBtn"></button>
+        </div>
+        <div class="modal-body">
+          
+          <!-- Step 1: Email -->
+          <div id="stepEmail">
+            <p class="text-muted small mb-4">Enter your registered email address to receive a 6-digit OTP.</p>
+            <div class="mb-3">
+              <label class="form-label fw-bold small">Email Address</label>
+              <input type="email" class="form-control" id="resetEmail" placeholder="e.g. yourname@example.com">
+            </div>
+            <button class="btn btn-primary w-100 rounded-pill mt-3" id="sendOtpBtn">Send OTP</button>
+          </div>
+
+          <!-- Step 2: OTP -->
+          <div id="stepOtp" class="d-none">
+            <p class="text-muted small mb-4">We've sent a 6-digit code to <strong id="displayEmail"></strong>.</p>
+            <div class="mb-3">
+              <label class="form-label fw-bold small">Enter OTP</label>
+              <input type="text" class="form-control text-center fs-4 letter-spacing-1" id="resetOtp" maxlength="6" placeholder="000000">
+            </div>
+            <button class="btn btn-primary w-100 rounded-pill mt-3" id="verifyOtpBtn">Verify OTP</button>
+            <div class="text-center mt-3">
+              <a href="#" class="join-link small" id="backToEmailBtn">Back to Email</a>
+            </div>
+          </div>
+
+          <!-- Step 3: New Password -->
+          <div id="stepPassword" class="d-none">
+            <p class="text-muted small mb-4">OTP verified. Please set your new secure password.</p>
+            <div class="mb-3">
+              <label class="form-label fw-bold small">New Password</label>
+              <input type="password" class="form-control" id="newPassword" placeholder="New Password">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold small">Confirm Password</label>
+              <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password">
+              <div id="pwdError" class="text-danger small mt-1 d-none">Passwords do not match</div>
+            </div>
+            <button class="btn btn-primary w-100 rounded-pill mt-3" id="setNewPwdBtn">Set New Password</button>
+          </div>
+
+        </div>
+      </div>
     </div>
   </div>
 
@@ -214,7 +270,122 @@
           alert("Server connection failed.");
         });
     }
+
+    // --- Forgot Password Logic ---
+    let resetEmailStr = "";
+    
+    document.getElementById("sendOtpBtn").onclick = async () => {
+      const email = document.getElementById("resetEmail").value.trim();
+      if (!email) { alert("Please enter your email."); return; }
+      
+      const btn = document.getElementById("sendOtpBtn");
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/students/forgot-password/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          resetEmailStr = email;
+          document.getElementById("displayEmail").innerText = email;
+          document.getElementById("stepEmail").classList.add("d-none");
+          document.getElementById("stepOtp").classList.remove("d-none");
+        } else {
+          alert(data.message);
+        }
+      } catch (e) {
+        alert("Network error.");
+      }
+      btn.innerHTML = 'Send OTP';
+      btn.disabled = false;
+    };
+
+    document.getElementById("backToEmailBtn").onclick = () => {
+      document.getElementById("stepOtp").classList.add("d-none");
+      document.getElementById("stepEmail").classList.remove("d-none");
+    };
+
+    document.getElementById("verifyOtpBtn").onclick = async () => {
+      const otp = document.getElementById("resetOtp").value.trim();
+      if (otp.length !== 6) { alert("Please enter the 6-digit OTP."); return; }
+      
+      const btn = document.getElementById("verifyOtpBtn");
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/students/forgot-password/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: resetEmailStr, otp })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById("stepOtp").classList.add("d-none");
+          document.getElementById("stepPassword").classList.remove("d-none");
+        } else {
+          alert(data.message);
+        }
+      } catch (e) {
+        alert("Network error.");
+      }
+      btn.innerHTML = 'Verify OTP';
+      btn.disabled = false;
+    };
+
+    document.getElementById("setNewPwdBtn").onclick = async () => {
+      const otp = document.getElementById("resetOtp").value.trim();
+      const pwd = document.getElementById("newPassword").value;
+      const pwdConfirm = document.getElementById("confirmPassword").value;
+      const errorDiv = document.getElementById("pwdError");
+      
+      if (!pwd || pwd.length < 6) { alert("Password must be at least 6 characters."); return; }
+      if (pwd !== pwdConfirm) {
+        errorDiv.classList.remove("d-none");
+        return;
+      } else {
+        errorDiv.classList.add("d-none");
+      }
+
+      const btn = document.getElementById("setNewPwdBtn");
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/students/forgot-password/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: resetEmailStr, otp, new_password: pwd })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          alert("Password reset successfully! You can now log in.");
+          document.getElementById("closeForgotModalBtn").click();
+          // Reset UI
+          document.getElementById("stepPassword").classList.add("d-none");
+          document.getElementById("stepEmail").classList.remove("d-none");
+          document.getElementById("resetEmail").value = "";
+          document.getElementById("resetOtp").value = "";
+          document.getElementById("newPassword").value = "";
+          document.getElementById("confirmPassword").value = "";
+        } else {
+          alert(data.message);
+        }
+      } catch (e) {
+        alert("Network error.");
+      }
+      btn.innerHTML = 'Set New Password';
+      btn.disabled = false;
+    };
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

@@ -147,8 +147,9 @@
       <div class="col-md-3 mb-4">
         <div class="profile-card pb-3 text-center">
           <div class="profile-header"></div>
-          <div class="profile-img-placeholder">
-            <i class="fas fa-user"></i>
+          <div class="profile-img-placeholder p-0">
+            <img id="sidebar-avatar" src="" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:none;">
+            <i class="fas fa-user" id="sidebar-avatar-icon"></i>
           </div>
           <h5 id="welcome" class="mt-2 mb-0 px-2" style="font-weight: 600; font-size: 1.1rem; color: #191919;">Loading Profile...</h5>
           <p id="trade" class="text-muted mb-3 mt-1 px-3" style="font-size: 0.85rem;">Setting up your dashboard</p>
@@ -308,7 +309,19 @@
         .then(student => {
           if (student.fullName) {
             document.getElementById("welcome").innerText = student.fullName;
-            document.getElementById("nav-avatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&background=0a66c2&color=fff&bold=true`;
+            
+            if (student.profilePicUrl) {
+                document.getElementById("nav-avatar").src = student.profilePicUrl;
+                
+                const sidebarAvatar = document.getElementById("sidebar-avatar");
+                if (sidebarAvatar) {
+                    sidebarAvatar.src = student.profilePicUrl;
+                    sidebarAvatar.style.display = "block";
+                    document.getElementById("sidebar-avatar-icon").style.display = "none";
+                }
+            } else {
+                document.getElementById("nav-avatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&background=0a66c2&color=fff&bold=true`;
+            }
             
             // Get trade from latest education
             const lastEdu = student.education && student.education.length > 0 ? student.education[student.education.length-1] : null;

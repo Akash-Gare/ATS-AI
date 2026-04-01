@@ -1,11 +1,22 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from services.llm_service import generate_interview_questions, evaluate_answer
-from fastapi import HTTPException
+from fastapi import HTTPException, File, UploadFile, Form
 from pydantic import BaseModel
 from typing import List, Optional
 from bson import ObjectId
+import os
+import shutil
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import random
+from datetime import datetime, timedelta
 from db import students_collection, jobs_collection, interviews_collection, applications_collection
+
+# Configure SMTP
+SMTP_EMAIL = os.getenv("SMTP_EMAIL", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 
 from services.scoring_service import calculate_skills_similarity, calculate_job_match
 
@@ -13,6 +24,13 @@ app = FastAPI(title="ATS AI Engine")
 
 # Serve frontend
 app.mount("/ui", StaticFiles(directory="frontend", html=True), name="frontend")
+
+# Ensure upload folders exist
+os.makedirs("uploads/profile_pics", exist_ok=True)
+os.makedirs("uploads/resumes", exist_ok=True)
+
+# Serve uploads
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ---------- Models ----------
 
@@ -172,6 +190,178 @@ def get_student(student_id: str):
 
     student["_id"] = str(student["_id"])
     return student
+
+
+class StudentUpdate(BaseModel):
+    fullName: str
+    dob: str = ""
+    mobile: str = ""
+    email: str = ""
+    city: str = ""
+    state: str = ""
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class VerifyOTPRequest(BaseModel):
+    email: str
+    otp: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+
+def send_otp_email(recipient_email, otp):
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
+    
+    current_smtp_email = os.getenv("SMTP_EMAIL", "").strip()
+    current_smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+
+    if not current_smtp_email or not current_smtp_password or current_smtp_email == "your_email_here@gmail.com":
+        print(f"MOCK EMAIL (SMTP not properly configured): To {recipient_email}, Your OTP is {otp}")
+        return True
+        
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = current_smtp_email
+        msg['To'] = recipient_email
+        msg['Subject'] = "ATS Connect - Password Reset OTP"
+        
+        body = f"Hello,\n\nYou requested to reset your password. Use the following OTP to proceed:\n\n{otp}\n\nThis OTP is valid for 10 minutes.\nIf you did not request this, please ignore this email.\n\nRegards,\nATS Connect Team"
+        msg.attach(MIMEText(body, 'plain'))
+        
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(current_smtp_email, current_smtp_password)
+        text = msg.as_string()
+        server.sendmail(current_smtp_email, recipient_email, text)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"SMTP Flow failed: {e}")
+        return False
+
+
+@app.post("/students/forgot-password/send-otp")
+def forgot_password_send_otp(req: ForgotPasswordRequest):
+    student = students_collection.find_one({"email": req.email})
+    if not student:
+        return {"success": False, "message": "Email not found"}
+        
+    otp = str(random.randint(100000, 999999))
+    expiry = datetime.utcnow() + timedelta(minutes=10)
+    
+    students_collection.update_one(
+        {"_id": student["_id"]},
+        {"$set": {"reset_otp": otp, "reset_otp_expiry": expiry}}
+    )
+    
+    email_sent = send_otp_email(req.email, otp)
+    
+    if email_sent:
+        return {"success": True, "message": "OTP sent successfully"}
+    else:
+        return {"success": False, "message": "Failed to send OTP email"}
+
+@app.post("/students/forgot-password/verify-otp")
+def forgot_password_verify_otp(req: VerifyOTPRequest):
+    student = students_collection.find_one({"email": req.email})
+    if not student:
+        return {"success": False, "message": "Invalid email"}
+        
+    stored_otp = student.get("reset_otp")
+    expiry = student.get("reset_otp_expiry")
+    
+    if not stored_otp or stored_otp != req.otp:
+        return {"success": False, "message": "Invalid OTP"}
+        
+    if not expiry or datetime.utcnow() > expiry:
+        return {"success": False, "message": "OTP has expired"}
+        
+    return {"success": True, "message": "OTP verified successfully"}
+
+@app.post("/students/forgot-password/reset")
+def forgot_password_reset(req: ResetPasswordRequest):
+    student = students_collection.find_one({"email": req.email})
+    if not student:
+        return {"success": False, "message": "Invalid email"}
+        
+    stored_otp = student.get("reset_otp")
+    expiry = student.get("reset_otp_expiry")
+    
+    if not stored_otp or stored_otp != req.otp:
+        return {"success": False, "message": "Invalid OTP"}
+        
+    if not expiry or datetime.utcnow() > expiry:
+        return {"success": False, "message": "OTP has expired"}
+        
+    students_collection.update_one(
+        {"_id": student["_id"]},
+        {
+            "$set": {"password": req.new_password},
+            "$unset": {"reset_otp": "", "reset_otp_expiry": ""}
+        }
+    )
+    return {"success": True, "message": "Password reset successfully"}
+
+
+@app.put("/students/update/{student_id}")
+def update_student(student_id: str, data: StudentUpdate):
+    if not ObjectId.is_valid(student_id):
+        raise HTTPException(status_code=400, detail="Invalid student id")
+    
+    result = students_collection.update_one(
+        {"_id": ObjectId(student_id)},
+        {"$set": {
+            "fullName": data.fullName,
+            "dob": data.dob,
+            "mobile": data.mobile,
+            "email": data.email,
+            "city": data.city,
+            "state": data.state
+        }}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    return {"message": "Profile updated successfully"}
+
+
+@app.post("/students/{student_id}/upload")
+def upload_files(
+    student_id: str,
+    profilePic: Optional[UploadFile] = File(None),
+    resume: Optional[UploadFile] = File(None)
+):
+    if not ObjectId.is_valid(student_id):
+        raise HTTPException(status_code=400, detail="Invalid student id")
+    
+    update_data = {}
+    
+    if profilePic:
+        pic_filename = f"{student_id}_{profilePic.filename}"
+        pic_path = os.path.join("uploads", "profile_pics", pic_filename)
+        with open(pic_path, "wb") as buffer:
+            shutil.copyfileobj(profilePic.file, buffer)
+        update_data["profilePicUrl"] = f"/uploads/profile_pics/{pic_filename}"
+        
+    if resume:
+        resume_filename = f"{student_id}_{resume.filename}"
+        resume_path = os.path.join("uploads", "resumes", resume_filename)
+        with open(resume_path, "wb") as buffer:
+            shutil.copyfileobj(resume.file, buffer)
+        update_data["resumeUrl"] = f"/uploads/resumes/{resume_filename}"
+        
+    if update_data:
+        students_collection.update_one(
+            {"_id": ObjectId(student_id)},
+            {"$set": update_data}
+        )
+        return {"message": "Files uploaded successfully", "data": update_data}
+    
+    return {"message": "No files provided"}
 
 
 @app.post("/jobs/post")

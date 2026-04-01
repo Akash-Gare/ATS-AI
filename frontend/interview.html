@@ -184,6 +184,21 @@
 
     // Submit Application Action
     function submitAnswers() {
+      let allAnswered = true;
+      for (let index = 0; index < questionsData.length; index++) {
+        const answerVal = document.getElementById(`answer${index}`).value.trim();
+        if (!answerVal) {
+          allAnswered = false;
+          document.getElementById(`answer${index}`).focus();
+          break;
+        }
+      }
+
+      if (!allAnswered) {
+        alert("Please answer all questions before submitting your interview.");
+        return;
+      }
+
       const submitBtn = document.getElementById("submitBtn");
       const timer = document.getElementById("interviewTimer");
       timer.classList.add("d-none");
