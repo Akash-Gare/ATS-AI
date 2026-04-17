@@ -48,7 +48,14 @@ db = client["test"] # Switched to production DB name found in Atlas search
 students_collection = db["candidateprofiles"] # Correct production candidate collection
 jobs_collection = db["jobposts"] # Correct production job collection
 interviews_collection = db["interviews"]
+interview_questions_collection = db["interview_questions"]
+interview_results_collection = db["interview_results"]
 applications_collection = db["applications"]
+question_bank_collection = db["question_bank"]
+
+# Create indexes
+question_bank_collection.create_index("key", unique=True)
+
 
 # ENABLING CHROMADB
 chroma_client = chromadb.PersistentClient(path="./chroma_db_new")

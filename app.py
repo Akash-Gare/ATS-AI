@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from services.llm_service import generate_interview_questions, evaluate_answer
+from services.pdf_service import generate_interview_report
 from fastapi import HTTPException, File, UploadFile, Form
 from pydantic import BaseModel
 from typing import List, Optional
@@ -12,7 +13,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import random
 from datetime import datetime, timedelta
-from db import students_collection, jobs_collection, interviews_collection, applications_collection
+from db import students_collection, jobs_collection, interviews_collection, applications_collection, interview_questions_collection, interview_results_collection
 
 # Configure SMTP
 SMTP_EMAIL = os.getenv("SMTP_EMAIL", "")
@@ -28,6 +29,7 @@ app.mount("/ui", StaticFiles(directory="frontend", html=True), name="frontend")
 # Ensure upload folders exist
 os.makedirs("uploads/profile_pics", exist_ok=True)
 os.makedirs("uploads/resumes", exist_ok=True)
+os.makedirs("uploads/reports", exist_ok=True)
 
 # Serve uploads
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -554,42 +556,52 @@ def start_interview(student_id: str, job_id: str):
         print("LLM RAW OUTPUT:", llm_output)
         raise HTTPException(status_code=500, detail="LLM returned invalid JSON")
 
-
-    interview_data = {
+    # Store in new interview_questions collection
+    interview_questions_data = {
         "student_id": student_id,
         "job_id": job_id,
         "questions": [
             {
                 "question": q["question"],
-                "ideal_answer": q["ideal_answer"],
-                "student_answer": "",
-                "score": 0
+                "options": q["options"],
+                "correct_answer": q["correct_answer"]
             }
             for q in questions
         ],
-        "interview_score": 0,
-        "final_score": 0,
-        "feedback": ""
+        "created_at": datetime.utcnow()
     }
-
-    result = interviews_collection.insert_one(interview_data)
+    
+    q_result = interview_questions_collection.insert_one(interview_questions_data)
+    interview_id = str(q_result.inserted_id)
 
     return {
-        "interview_id": str(result.inserted_id),
-        "questions": [q["question"] for q in questions]
+        "interview_id": interview_id,
+        "questions": [
+            {
+                "question": q["question"],
+                "options": q["options"]
+            }
+            for q in questions
+        ]
     }
 
 
 @app.get("/interview/{interview_id}")
 def get_interview(interview_id: str):
 
-    interview = interviews_collection.find_one({"_id": ObjectId(interview_id)})
+    interview = interview_questions_collection.find_one({"_id": ObjectId(interview_id)})
 
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
 
     return {
-        "questions": [q["question"] for q in interview["questions"]]
+        "questions": [
+            {
+                "question": q["question"],
+                "options": q["options"]
+            }
+            for q in interview["questions"]
+        ]
     }
 
 
@@ -606,44 +618,35 @@ class InterviewSubmission(BaseModel):
 @app.post("/interview/submit/{interview_id}")
 def submit_interview(interview_id: str, submission: InterviewSubmission):
 
-    interview = interviews_collection.find_one({"_id": ObjectId(interview_id)})
+    interview = interview_questions_collection.find_one({"_id": ObjectId(interview_id)})
 
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
 
-    total_score = 0
+    total_correct = 0
     num_questions = len(interview.get("questions", []))
 
     if num_questions == 0:
         raise HTTPException(status_code=400, detail="No questions found")
 
-    import json
-
-    # 🔹 Per Question Scoring
+    # 🔹 MCQ Scoring
+    scored_answers = []
     for i, ans in enumerate(submission.answers):
+        stored_q = interview["questions"][i]
+        is_correct = ans.answer.strip().lower() == stored_q["correct_answer"].strip().lower()
+        
+        if is_correct:
+            total_correct += 1
+            
+        scored_answers.append({
+            "question": stored_q["question"],
+            "student_answer": ans.answer,
+            "correct_answer": stored_q["correct_answer"],
+            "is_correct": is_correct
+        })
 
-        question_text = interview["questions"][i]["question"]
-        ideal_answer = interview["questions"][i]["ideal_answer"]
-        student_answer = ans.answer.strip()
-
-        # Evaluate using Mixtral LLM
-        try:
-            from services.llm_service import evaluate_answer
-            similarity_score = evaluate_answer(question_text, ideal_answer, student_answer)
-            question_feedback = "Good" if similarity_score >= 80 else ("Average" if similarity_score >= 50 else "Needs improvement")
-        except Exception as e:
-            print(f"Error evaluating answer: {e}")
-            similarity_score = 0.0
-            question_feedback = "Error evaluating answer."
-
-        interview["questions"][i]["student_answer"] = student_answer
-        interview["questions"][i]["score"] = similarity_score
-        interview["questions"][i]["feedback"] = question_feedback
-
-        total_score += similarity_score
-
-    # 🔹 Interview Score (Average)
-    interview_score = round(total_score / num_questions, 2)
+    # 🔹 Interview Score (Percentage)
+    interview_score = round((total_correct / num_questions) * 100, 2)
 
     # 🔹 Fetch Student & Job For Match Score
     student = students_collection.find_one({"_id": ObjectId(interview["student_id"])})
@@ -667,25 +670,40 @@ def submit_interview(interview_id: str, submission: InterviewSubmission):
     else:
         feedback = "Weak ⚠"
 
-    # 🔹 Update Database
-    interviews_collection.update_one(
-        {"_id": ObjectId(interview_id)},
-        {
-            "$set": {
-                "questions": interview["questions"],
-                "interview_score": interview_score,
-                "job_match_score": job_match_score,
-                "final_score": final_score,
-                "feedback": feedback
-            }
-        }
-    )
+    # 🔹 Store in interview_results collection
+    result_data = {
+        "interview_id": interview_id,
+        "student_id": interview["student_id"],
+        "job_id": interview["job_id"],
+        "answers": scored_answers,
+        "final_score": final_score,
+        "interview_score": interview_score,
+        "job_match_score": job_match_score,
+        "feedback": feedback,
+        "timestamp": datetime.utcnow()
+    }
+    
+    # 🔹 Generate PDF Report
+    try:
+        report_url = generate_interview_report(
+            result_data=result_data,
+            interview_data=interview,
+            student_name=student.get("fullName", "Candidate"),
+            job_title=job.get("jobTitle", job.get("job_title", "Position"))
+        )
+        result_data["report_url"] = report_url
+    except Exception as e:
+        print(f"PDF Generation Error: {e}")
+        report_url = None
+
+    interview_results_collection.insert_one(result_data)
 
     return {
         "interview_score": interview_score,
         "job_match_score": job_match_score,
         "final_score": final_score,
-        "feedback": feedback
+        "feedback": feedback,
+        "report_url": report_url
     }
 
 
@@ -693,15 +711,21 @@ def submit_interview(interview_id: str, submission: InterviewSubmission):
 @app.get("/interview/result/{interview_id}")
 def get_result(interview_id: str):
 
-    interview = interviews_collection.find_one({"_id": ObjectId(interview_id)})
+    # Try session collection first (legacy or in-progress)
+    interview = interview_results_collection.find_one({"interview_id": interview_id})
+    
+    # Fallback to general interviews collection
+    if not interview:
+        interview = interviews_collection.find_one({"_id": ObjectId(interview_id)})
 
     if not interview:
-        raise HTTPException(status_code=404, detail="Interview not found")
+        raise HTTPException(status_code=404, detail="Interview result not found")
     
     return {
         "student_id": str(interview.get("student_id")),
         "interview_score": interview.get("interview_score", 0),
         "job_match_score": interview.get("job_match_score", 0),
-        "final_score": interview.get("final_score", 0),
-        "feedback": interview.get("feedback", "Pending")
+        "final_score": interview.get("final_score", interview.get("score", 0)),
+        "feedback": interview.get("feedback", "Pending"),
+        "report_url": interview.get("report_url")
     }

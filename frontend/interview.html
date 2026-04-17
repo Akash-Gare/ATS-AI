@@ -163,15 +163,32 @@
         const container = document.getElementById("questionsContainer");
 
         questionsData.forEach((q, index) => {
+          const isMCQ = typeof q === 'object' && q.question;
+          const questionText = isMCQ ? q.question : q;
+          
+          let inputHtml = "";
+          if (isMCQ && q.options) {
+            inputHtml = q.options.map((opt, i) => `
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="qans${index}" id="q${index}opt${i}" value="${opt}" style="transform: scale(1.2); cursor: pointer;">
+                <label class="form-check-label ms-2" for="q${index}opt${i}" style="cursor: pointer; font-size: 1.05rem;">
+                  ${opt}
+                </label>
+              </div>
+            `).join("");
+          } else {
+            inputHtml = `<textarea class="form-control" id="answer${index}" rows="5"
+                        placeholder="Discuss your approach, reasoning, and technical implementation here..."></textarea>`;
+          }
+
           container.innerHTML += `
             <div class="card-box shadow-sm border">
                 <div class="question-title">
                   <div class="q-number">${index + 1}</div>
-                  <div>${q}</div>
+                  <div>${questionText}</div>
                 </div>
                 <div class="mt-3 ps-5">
-                  <textarea class="form-control" id="answer${index}" rows="5"
-                      placeholder="Discuss your approach, reasoning, and technical implementation here..."></textarea>
+                  ${inputHtml}
                 </div>
             </div>
         `;
@@ -184,32 +201,39 @@
 
     // Submit Application Action
     function submitAnswers() {
-      let allAnswered = true;
+      const answers = [];
+      
       for (let index = 0; index < questionsData.length; index++) {
-        const answerVal = document.getElementById(`answer${index}`).value.trim();
-        if (!answerVal) {
-          allAnswered = false;
-          document.getElementById(`answer${index}`).focus();
-          break;
+        const q = questionsData[index];
+        const isMCQ = typeof q === 'object' && q.question;
+        let studentAnswer = "";
+
+        if (isMCQ) {
+          const selected = document.querySelector(`input[name="qans${index}"]:checked`);
+          if (!selected) {
+            alert(`Please select an answer for Question ${index + 1}`);
+            return;
+          }
+          studentAnswer = selected.value;
+        } else {
+          studentAnswer = document.getElementById(`answer${index}`).value.trim();
+          if (!studentAnswer) {
+            alert(`Please provide an answer for Question ${index + 1}`);
+            document.getElementById(`answer${index}`).focus();
+            return;
+          }
         }
+
+        answers.push({
+          question: isMCQ ? q.question : q,
+          answer: studentAnswer
+        });
       }
 
-      if (!allAnswered) {
-        alert("Please answer all questions before submitting your interview.");
-        return;
-      }
 
       const submitBtn = document.getElementById("submitBtn");
       const timer = document.getElementById("interviewTimer");
       timer.classList.add("d-none");
-
-      const answers = [];
-      questionsData.forEach((q, index) => {
-        answers.push({
-          question: q,
-          answer: document.getElementById(`answer${index}`).value
-        });
-      });
 
       submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Compiling Grading Report...';
       submitBtn.disabled = true;

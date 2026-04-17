@@ -239,6 +239,9 @@
         <button class="action-btn" id="returnFeedBtn">
           <i class="fas fa-arrow-left me-2"></i> Return to Feed
         </button>
+        <button class="action-btn ms-2" id="downloadPdfBtn" style="display: none; background-color: #0a66c2; color: white; border: none;">
+          <i class="fas fa-file-pdf me-2"></i> Download Report
+        </button>
       </div>
 
     </div>
@@ -266,6 +269,15 @@
         document.getElementById("returnFeedBtn").onclick = () => {
           location.href = `student_dashboard.html?id=${studentId}`;
         };
+
+        // Handle Download PDF
+        if (data.report_url) {
+          const downloadBtn = document.getElementById("downloadPdfBtn");
+          downloadBtn.style.display = "inline-block";
+          downloadBtn.onclick = () => {
+            window.open(data.report_url, '_blank');
+          };
+        }
 
         document.getElementById("loader").style.display = "none";
         document.getElementById("resultCard").style.display = "block";
