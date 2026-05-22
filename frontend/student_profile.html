@@ -9,9 +9,11 @@
     <style>
         :root {
             --linkedin-blue: #0a66c2;
+            --linkedin-dark-blue: #004182;
             --bg-gray: #f3f2ef;
             --text-dark: #191919;
             --text-muted: #666666;
+            --border-color: #e0dfdc;
         }
         body {
             background-color: var(--bg-gray);
@@ -29,79 +31,167 @@
         .main-card {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
             margin-bottom: 20px;
             overflow: hidden;
         }
         .profile-banner {
-            height: 150px;
+            height: 180px;
             background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
         }
         .profile-pic-container {
-            margin-top: -80px;
+            margin-top: -90px;
             padding: 0 24px;
         }
         .profile-pic {
-            width: 150px;
-            height: 150px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             border: 4px solid white;
             background-color: white;
             object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
-        .section-header {
-            font-size: 1.25rem;
+        .section-title {
+            font-size: 1.2rem;
             font-weight: 600;
-            margin-bottom: 15px;
+            color: var(--text-dark);
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
         }
-        .section-header i {
-            margin-right: 12px;
-            color: var(--text-muted);
+        .section-title i {
+            margin-right: 10px;
+            color: var(--linkedin-blue);
         }
         .data-label {
             font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-dark);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-bottom: 2px;
         }
         .data-value {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+        
+        /* Badges styling */
+        .status-badge {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .badge-applied {
+            background-color: #e8f3fc;
+            color: #0a66c2;
+            border: 1px solid #d0e7f9;
+        }
+        .badge-placed {
+            background-color: #e7f6ec;
+            color: #0f763e;
+            border: 1px solid #c9edd3;
+        }
+        .badge-notplaced {
+            background-color: #fcebeb;
+            color: #cc1010;
+            border: 1px solid #f9d2d2;
+        }
+        .badge-complete {
+            background-color: #e7f6ec;
+            color: #0f763e;
+            border: 1px solid #c9edd3;
+        }
+        
+        /* Documents block styling */
+        .doc-item {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .doc-item:hover {
+            background: #f1f3f5;
+            border-color: #ced4da;
+        }
+        .doc-name {
+            font-weight: 600;
             font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 15px;
+            color: var(--text-dark);
+            margin-bottom: 0;
         }
-        .list-entry {
-            border-left: 2px solid #e0e0e0;
-            padding-left: 20px;
-            margin-left: 10px;
-            margin-bottom: 25px;
+        
+        /* Timeline styling */
+        .timeline-container {
             position: relative;
+            padding-left: 30px;
         }
-        .list-entry::before {
+        .timeline-container::before {
             content: '';
             position: absolute;
-            left: -6px;
-            top: 0;
-            width: 10px;
-            height: 10px;
-            background: var(--linkedin-blue);
+            left: 9px;
+            top: 5px;
+            bottom: 5px;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 6px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
+            background-color: var(--linkedin-blue);
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--linkedin-blue);
         }
-        .entry-title {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 2px;
-        }
-        .entry-subtitle {
-            font-size: 0.9rem;
+        .timeline-item-title {
+            font-weight: 700;
+            font-size: 1.05rem;
             color: var(--text-dark);
             margin-bottom: 2px;
         }
-        .entry-meta {
+        .timeline-item-subtitle {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #0a66c2;
+            margin-bottom: 2px;
+        }
+        .timeline-item-meta {
             font-size: 0.85rem;
             color: var(--text-muted);
             margin-bottom: 8px;
+        }
+        
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .skill-badge {
+            background-color: #f3f2ef;
+            color: #000000e6;
+            border: 1px solid #8f8f8f;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -111,76 +201,146 @@
         <div class="container py-1">
             <a class="navbar-brand" id="navHomeLink" href="#"><i class="fas fa-briefcase"></i> ATS Connect</a>
             <div class="ms-auto">
-                <button class="btn btn-outline-primary rounded-pill btn-sm" id="backDashBtn">Back to Dashboard</button>
+                <button class="btn btn-outline-primary rounded-pill btn-sm fw-bold px-3" id="backDashBtn">Back to Dashboard</button>
             </div>
         </div>
     </nav>
 
     <div class="container mt-4 mb-5" id="profileContent" style="display: none;">
-        <div class="row justify-content-center">
-            <div class="col-lg-9">
-                
-                <!-- Top Header Card -->
+        <div class="row">
+            
+            <!-- Top Hero banner Card -->
+            <div class="col-12 mb-4">
                 <div class="main-card">
                     <div class="profile-banner"></div>
                     <div class="profile-pic-container d-flex justify-content-between align-items-end">
                         <img id="profilePic" src="" class="profile-pic" alt="Profile Picture">
-                        <div class="mb-3 d-flex gap-2">
-                            <button id="editProfileBtn" class="btn btn-outline-primary bg-white rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit Profile <i class="fas fa-edit ms-1"></i></button>
-                            <a id="viewResumeBtn" href="#" target="_blank" class="btn btn-primary rounded-pill px-3 fw-bold shadow-sm d-none">View Resume <i class="fas fa-eye ms-1"></i></a>
+                        <div class="mb-4 d-flex gap-2">
+                            <button id="editProfileBtn" class="btn btn-outline-primary bg-white rounded-pill px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit Profile <i class="fas fa-edit ms-1"></i></button>
+                            <a id="viewResumeBtn" href="#" target="_blank" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-none">View Resume <i class="fas fa-eye ms-1"></i></a>
                         </div>
                     </div>
                     <div class="p-4 pt-3">
                         <h2 id="fullName" class="fw-bold mb-1">Loading...</h2>
-                        <h5 id="mainTrade" class="text-muted mb-2">Profession</h5>
-                        <p class="mb-0 text-muted"><i class="fas fa-location-dot me-1"></i> <span id="locationStr">Location</span></p>
+                        <h5 id="mainTrade" class="text-muted mb-2"><i class="fas fa-tools me-2"></i>Profession</h5>
+                        <p class="mb-0 text-muted"><i class="fas fa-location-dot me-2"></i> <span id="locationStr">Location</span></p>
                     </div>
                 </div>
+            </div>
 
-                <div class="row">
-                    <!-- Left: Info Column -->
-                    <div class="col-md-5">
-                        <div class="main-card p-4">
-                            <div class="section-header"><i class="fas fa-address-card"></i> Personal Information</div>
-                            
+            <!-- Left Column: Personal, Address, Placement, Skills Info -->
+            <div class="col-md-5">
+                
+                <!-- 1. Personal Information Card -->
+                <div class="main-card p-4">
+                    <h5 class="section-title"><i class="fas fa-user"></i> Personal Information</h5>
+                    <div class="row">
+                        <div class="col-12">
                             <div class="data-label">Full Name</div>
                             <div class="data-value" id="infoName">...</div>
-                            
+                        </div>
+                        <div class="col-6">
                             <div class="data-label">Date of birth</div>
                             <div class="data-value" id="infoDob">...</div>
-                            
+                        </div>
+                        <div class="col-6">
+                            <div class="data-label">Trade</div>
+                            <div class="data-value" id="infoTrade">...</div>
+                        </div>
+                        <div class="col-12">
                             <div class="data-label">Mobile number</div>
                             <div class="data-value" id="infoMobile">...</div>
-                            
+                        </div>
+                        <div class="col-12">
                             <div class="data-label">Email address</div>
                             <div class="data-value" id="infoEmail">...</div>
-
-                            <div class="section-header mt-4"><i class="fas fa-bullseye"></i> Job Preferences</div>
-                            <div class="data-label">Expected salary</div>
-                            <div class="data-value" id="prefSalary">Not specified</div>
-                            
-                            <div class="data-label">Preferred locations</div>
-                            <div class="data-value" id="prefLocs">N/A</div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Lists Column -->
-                    <div class="col-md-7">
-                        <div class="main-card p-4">
-                            <div class="section-header"><i class="fas fa-briefcase"></i> Experience</div>
-                            <div id="experienceList">
-                                <!-- Experience entries -->
-                            </div>
-
-                            <div class="section-header mt-4"><i class="fas fa-graduation-cap"></i> Education</div>
-                            <div id="educationList">
-                                <!-- Education entries -->
-                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- 2. Address Information Card -->
+                <div class="main-card p-4">
+                    <h5 class="section-title"><i class="fas fa-map-location-dot"></i> Address Information</h5>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-label">Area / Locality</div>
+                            <div class="data-value" id="infoArea">Not specified</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="data-label">Taluka</div>
+                            <div class="data-value" id="infoTaluka">Not specified</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="data-label">District</div>
+                            <div class="data-value" id="infoDistrict">Not specified</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="data-label">State</div>
+                            <div class="data-value" id="infoState">Not specified</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="data-label">Pincode</div>
+                            <div class="data-value" id="infoPincode">Not specified</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Skills Card -->
+                <div class="main-card p-4">
+                    <h5 class="section-title"><i class="fas fa-tags"></i> Skills Matrix</h5>
+                    <div class="skills-container" id="skillsMatrix">
+                        <!-- Skills render as badges -->
+                    </div>
+                </div>
+
+                <!-- 4. Placement Information Card -->
+                <div class="main-card p-4">
+                    <h5 class="section-title"><i class="fas fa-briefcase-clock"></i> Placement & Status</h5>
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <div class="data-label mb-1">Application Status</div>
+                            <div id="badgeApplication">...</div>
+                        </div>
+                        <div>
+                            <div class="data-label mb-1">Placement Status</div>
+                            <div id="badgePlacement">...</div>
+                        </div>
+                        <div>
+                            <div class="data-label mb-1">Profile Completion</div>
+                            <div id="badgeProfileComplete">...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Right Column: Lists & Documents -->
+            <div class="col-md-7">
+                
+                <!-- 5. Documents Section -->
+                <div class="main-card p-4">
+                    <h5 class="section-title"><i class="fas fa-folder-open"></i> Uploaded Documents</h5>
+                    <div class="d-flex flex-column gap-3" id="documentsList">
+                        <!-- Render standard document buttons -->
+                    </div>
+                </div>
+
+                <!-- 6. Experience Card -->
+                <div class="main-card p-4">
+                    <h5 class="section-title"><i class="fas fa-history"></i> Experience Timeline</h5>
+                    <div class="timeline-container" id="experienceList">
+                        <!-- Experience entries -->
+                    </div>
+                </div>
+
+                <!-- 7. Education Card -->
+                <div class="main-card p-4">
+                    <h5 class="section-title"><i class="fas fa-graduation-cap"></i> Education details</h5>
+                    <div class="timeline-container" id="educationList">
+                        <!-- Education entries -->
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -189,12 +349,15 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header border-0 pb-0 pt-4 px-4">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-user-edit text-primary me-2"></i> Edit Profile</h5>
+                    <h5 class="modal-title fw-bold text-primary"><i class="fas fa-user-edit me-2"></i> Edit Candidate Profile</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body px-4">
                     <form id="editProfileForm">
                         <div class="row g-3">
+                            <div class="col-12 mt-2">
+                                <h6 class="fw-bold text-secondary mb-2 border-bottom pb-1"><i class="fas fa-user-tag me-2"></i> Basic Details</h6>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-muted mb-1">Full Name</label>
                                 <input type="text" class="form-control bg-light" id="editFullName" required>
@@ -211,42 +374,90 @@
                                 <label class="form-label fw-bold small text-muted mb-1">Date of Birth</label>
                                 <input type="date" class="form-control bg-light" id="editDob">
                             </div>
+
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-secondary mb-2 border-bottom pb-1"><i class="fas fa-map-marked-alt me-2"></i> Address & Skills Details</h6>
+                            </div>
                             <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">Area / Locality</label>
+                                <input type="text" class="form-control bg-light" id="editArea">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">Taluka</label>
+                                <input type="text" class="form-control bg-light" id="editTaluka">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">District</label>
+                                <input type="text" class="form-control bg-light" id="editDistrict">
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold small text-muted mb-1">City</label>
                                 <input type="text" class="form-control bg-light" id="editCity">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold small text-muted mb-1">State</label>
                                 <input type="text" class="form-control bg-light" id="editState">
                             </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold small text-muted mb-1">Pin Code</label>
+                                <input type="text" class="form-control bg-light" id="editPinCode">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold small text-muted mb-1">Skills (comma-separated)</label>
+                                <input type="text" class="form-control bg-light" id="editSkills" placeholder="e.g. MS Office, Excel, Typing, Maintenance">
+                            </div>
                             
-                            <div class="col-12 mt-4 pt-3 border-top">
-                                <h6 class="fw-bold mb-3"><i class="fas fa-cloud-upload-alt text-primary me-2"></i> Documents & Media</h6>
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-secondary mb-2 border-bottom pb-1"><i class="fas fa-cloud-upload-alt me-2"></i> Upload Documents & Media</h6>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold small text-muted mb-1">Profile Picture</label>
+                                <label class="form-label fw-bold small text-muted mb-1">Profile Photo</label>
                                 <input type="file" class="form-control form-control-sm bg-light" id="editProfilePic" accept="image/png, image/jpeg">
-                                <div class="form-text small">Accepted formats: JPG, PNG</div>
+                                <div class="form-text small">Upload JPG, PNG</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold small text-muted mb-1">Resume</label>
+                                <label class="form-label fw-bold small text-muted mb-1">Resume Document</label>
                                 <input type="file" class="form-control form-control-sm bg-light" id="editResume" accept=".pdf,.doc,.docx">
-                                <div class="form-text small">Accepted formats: PDF, DOCX</div>
+                                <div class="form-text small">Upload PDF, DOCX</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">10th Marksheet</label>
+                                <input type="file" class="form-control form-control-sm bg-light" id="editTenth" accept=".pdf,.png,.jpg,.jpeg">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">12th Marksheet</label>
+                                <input type="file" class="form-control form-control-sm bg-light" id="editTwelfth" accept=".pdf,.png,.jpg,.jpeg">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">Final Semester Marksheet</label>
+                                <input type="file" class="form-control form-control-sm bg-light" id="editFinalSem" accept=".pdf,.png,.jpg,.jpeg">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">Provisional Degree Certificate</label>
+                                <input type="file" class="form-control form-control-sm bg-light" id="editProvisional" accept=".pdf,.png,.jpg,.jpeg">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">Apprentice Certificate</label>
+                                <input type="file" class="form-control form-control-sm bg-light" id="editApprentice" accept=".pdf,.png,.jpg,.jpeg">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted mb-1">Experience Certificate</label>
+                                <input type="file" class="form-control form-control-sm bg-light" id="editExperience" accept=".pdf,.png,.jpg,.jpeg">
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 pt-2 pb-4 px-4 mt-2">
-                    <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="saveProfileBtn">Save Changes</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="saveProfileBtn">Save Profile Details</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="loader" class="text-center mt-5">
+    <div id="loader" class="text-center mt-5 p-5">
         <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2 text-muted">Retrieving candidate profile...</p>
+        <p class="mt-2 text-muted fw-bold">Retrieving complete candidate profile details...</p>
     </div>
 
     <script>
@@ -256,7 +467,6 @@
             alert("No student ID provided.");
             window.location.href = "login.html";
         } else {
-            // Set up navigation links with ID
             document.getElementById("navHomeLink").href = `student_dashboard.html?id=${studentId}`;
             document.getElementById("backDashBtn").onclick = () => {
                 location.href = `student_dashboard.html?id=${studentId}`;
@@ -268,129 +478,226 @@
                     document.getElementById("loader").style.display = "none";
                     document.getElementById("profileContent").style.display = "block";
 
-                    // Top Card
+                    // Support ProfilePhoto / ProfilePicUrl with avatar fallback
+                    const finalPhoto = student.profilePhoto || student.profilePicUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&size=160&background=0a66c2&color=fff&bold=true`;
+                    document.getElementById("profilePic").src = finalPhoto;
+
+                    // Header Display
                     document.getElementById("fullName").innerText = student.fullName;
-                    
-                    if (student.profilePicUrl) {
-                        document.getElementById("profilePic").src = student.profilePicUrl;
-                    } else {
-                        document.getElementById("profilePic").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&size=150&background=0a66c2&color=fff&bold=true`;
-                    }
-                    
+                    const lastEdu = student.education && student.education.length > 0 ? student.education[student.education.length-1] : null;
+                    const studentTrade = student.trade || (lastEdu ? lastEdu.trade : "Professional Candidate");
+                    document.getElementById("mainTrade").innerHTML = `<i class="fas fa-tools me-2"></i>${studentTrade}`;
+                    document.getElementById("locationStr").innerText = `${student.city || ""}, ${student.state || ""}`;
+
+                    // View Resume button
                     if (student.resumeUrl) {
                         const resumeBtn = document.getElementById("viewResumeBtn");
                         resumeBtn.href = student.resumeUrl;
                         resumeBtn.classList.remove("d-none");
                     }
 
-                    // Populate edit form
+                    // 1. Personal Information Card
+                    document.getElementById("infoName").innerText = student.fullName;
+                    document.getElementById("infoDob").innerText = student.dob || "Not specified";
+                    document.getElementById("infoTrade").innerText = studentTrade;
+                    document.getElementById("infoMobile").innerText = student.mobile || "Not specified";
+                    document.getElementById("infoEmail").innerText = student.email || "Not specified";
+
+                    // 2. Address Information Card
+                    document.getElementById("infoArea").innerText = student.area || "Not specified";
+                    document.getElementById("infoTaluka").innerText = student.taluka || "Not specified";
+                    document.getElementById("infoDistrict").innerText = student.district || "Not specified";
+                    document.getElementById("infoState").innerText = student.state || "Not specified";
+                    document.getElementById("infoPincode").innerText = student.pinCode || "Not specified";
+
+                    // 3. Skills Matrix Section
+                    const skillsMatrix = document.getElementById("skillsMatrix");
+                    skillsMatrix.innerHTML = "";
+                    const skillsArray = student.skills || [];
+                    if (skillsArray.length > 0) {
+                        skillsArray.forEach(skill => {
+                            skillsMatrix.innerHTML += `<span class="skill-badge">${skill}</span>`;
+                        });
+                    } else {
+                        skillsMatrix.innerHTML = '<span class="text-muted small">No specific skills listed. Click edit to add skills.</span>';
+                    }
+
+                    // 4. Placement & Application Badges Section
+                    const appStatus = student.applicationStatus || "Not Applied";
+                    const placeStatus = student.placementStatus || "Not Placed";
+                    
+                    document.getElementById("badgeApplication").innerHTML = `<span class="status-badge badge-applied"><i class="fas fa-circle-check me-1"></i> ${appStatus}</span>`;
+                    
+                    const placeClass = placeStatus.toLowerCase() === "placed" ? "badge-placed" : "badge-notplaced";
+                    const placeIcon = placeStatus.toLowerCase() === "placed" ? "fa-circle-check" : "fa-circle-xmark";
+                    document.getElementById("badgePlacement").innerHTML = `<span class="status-badge ${placeClass}"><i class="fas ${placeIcon} me-1"></i> ${placeStatus}</span>`;
+                    
+                    const isComplete = student.isProfileComplete || false;
+                    const completeHtml = isComplete 
+                        ? `<span class="status-badge badge-complete"><i class="fas fa-circle-check me-1"></i> Profile Complete</span>` 
+                        : `<span class="status-badge badge-notplaced"><i class="fas fa-circle-exclamation me-1"></i> Incomplete Profile</span>`;
+                    document.getElementById("badgeProfileComplete").innerHTML = completeHtml;
+
+                    // 5. Documents Section card renderer
+                    const docsList = document.getElementById("documentsList");
+                    docsList.innerHTML = "";
+
+                    const docsMeta = [
+                        { key: "tenthMarksheet", name: "10th Marksheet", icon: "fa-file-invoice" },
+                        { key: "twelfthMarksheet", name: "12th Marksheet", icon: "fa-file-invoice" },
+                        { key: "finalSemMarksheet", name: "Final Sem Marksheet", icon: "fa-file-lines" },
+                        { key: "provisionalDegreeCertificate", name: "Provisional Degree Certificate", icon: "fa-graduation-cap" },
+                        { key: "apprenticeCertificate", name: "Apprentice Certificate", icon: "fa-certificate" },
+                        { key: "experienceCertificate", name: "Experience Certificate", icon: "fa-briefcase" }
+                    ];
+
+                    const docsData = student.documents || {};
+                    docsMeta.forEach(doc => {
+                        const fileUrl = docsData[doc.key] || null;
+                        let actionButtonHtml = `<span class="text-danger fw-bold small"><i class="fas fa-circle-xmark me-1"></i> Not Uploaded</span>`;
+                        if (fileUrl) {
+                            actionButtonHtml = `<a href="${fileUrl}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold"><i class="fas fa-download me-1"></i> View / Download</a>`;
+                        }
+                        docsList.innerHTML += `
+                            <div class="doc-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas ${doc.icon} text-secondary fs-5 me-3"></i>
+                                    <p class="doc-name">${doc.name}</p>
+                                </div>
+                                <div>${actionButtonHtml}</div>
+                            </div>
+                        `;
+                    });
+
+                    // 6. Experience Timeline Card
+                    const expContainer = document.getElementById("experienceList");
+                    expContainer.innerHTML = "";
+                    if (student.experience && student.experience.length > 0) {
+                        student.experience.forEach(exp => {
+                            expContainer.innerHTML += `
+                                <div class="timeline-item">
+                                    <div class="timeline-item-title">${exp.jobTitle}</div>
+                                    <div class="timeline-item-subtitle">${exp.companyName}</div>
+                                    <div class="timeline-item-meta"><i class="fas fa-business-time me-1"></i> ${exp.employmentType || 'Full time'}</div>
+                                    <div class="small text-secondary" style="white-space: pre-wrap;">${exp.jobDescription || ''}</div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        expContainer.innerHTML = '<p class="text-muted small my-2">No experience details listed.</p>';
+                    }
+
+                    // 7. Education timeline with rollNumber & certificateNumber
+                    const eduContainer = document.getElementById("educationList");
+                    eduContainer.innerHTML = "";
+                    if (student.education && student.education.length > 0) {
+                        student.education.forEach(edu => {
+                            const rollNumHtml = edu.rollNumber ? `<li><strong>Roll Number:</strong> ${edu.rollNumber}</li>` : "";
+                            const certNumHtml = edu.certificateNumber ? `<li><strong>Certificate Number:</strong> ${edu.certificateNumber}</li>` : "";
+                            const skillsHtml = edu.skills && edu.skills.length > 0 ? `<li><strong>Skills Acquired:</strong> ${edu.skills.join(", ")}</li>` : "";
+                            
+                            eduContainer.innerHTML += `
+                                <div class="timeline-item">
+                                    <div class="timeline-item-title">${edu.educationType}</div>
+                                    <div class="timeline-item-subtitle">${edu.instituteName}</div>
+                                    <div class="timeline-item-meta">Board: ${edu.boardName} • Passing Year: ${edu.passingYear}</div>
+                                    <div class="small mb-1">Trade/Course: <strong>${edu.trade}</strong></div>
+                                    <ul class="text-secondary small ps-3 mb-0">
+                                        ${rollNumHtml}
+                                        ${certNumHtml}
+                                        ${skillsHtml}
+                                    </ul>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        eduContainer.innerHTML = '<p class="text-muted small my-2">No education details listed.</p>';
+                    }
+
+                    // Populate edit modal fields
                     document.getElementById("editFullName").value = student.fullName || "";
                     document.getElementById("editDob").value = student.dob || "";
                     document.getElementById("editMobile").value = student.mobile || "";
                     document.getElementById("editEmail").value = student.email || "";
                     document.getElementById("editCity").value = student.city || "";
                     document.getElementById("editState").value = student.state || "";
-                    
-                    const lastEdu = student.education && student.education.length > 0 ? student.education[student.education.length-1] : null;
-                    document.getElementById("mainTrade").innerText = lastEdu ? lastEdu.trade : "Candidate";
-                    document.getElementById("locationStr").innerText = `${student.city || ""}, ${student.state || ""}`;
-
-                    // Personal Info
-                    document.getElementById("infoName").innerText = student.fullName;
-                    document.getElementById("infoDob").innerText = student.dob || "Not specified";
-                    document.getElementById("infoMobile").innerText = student.mobile || "Not specified";
-                    document.getElementById("infoEmail").innerText = student.email || "Not specified";
-
-                    // Preferences
-                    if (student.preferences) {
-                        document.getElementById("prefSalary").innerText = student.preferences.expectedSalary ? "₹" + student.preferences.expectedSalary : "Not specified";
-                        document.getElementById("prefLocs").innerText = student.preferences.preferredLocations || "N/A";
-                    }
-
-                    // Experience
-                    const expContainer = document.getElementById("experienceList");
-                    if (student.experience && student.experience.length > 0) {
-                        student.experience.forEach(exp => {
-                            expContainer.innerHTML += `
-                                <div class="list-entry">
-                                    <div class="entry-title">${exp.jobTitle}</div>
-                                    <div class="entry-subtitle">${exp.companyName}</div>
-                                    <div class="entry-meta">${exp.employmentType || 'Full time'}</div>
-                                    <div class="small text-muted">${exp.jobDescription || ''}</div>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        expContainer.innerHTML = '<p class="text-muted small">No experience details listed.</p>';
-                    }
-
-                    // Education
-                    const eduContainer = document.getElementById("educationList");
-                    if (student.education && student.education.length > 0) {
-                        student.education.forEach(edu => {
-                            eduContainer.innerHTML += `
-                                <div class="list-entry">
-                                    <div class="entry-title">${edu.educationType}</div>
-                                    <div class="entry-subtitle">${edu.instituteName}</div>
-                                    <div class="entry-meta">Board: ${edu.boardName} • Passing Year: ${edu.passingYear}</div>
-                                    <div class="small">Trade: <strong>${edu.trade}</strong></div>
-                                    ${edu.skills && edu.skills.length > 0 ? `<div class="small mt-1">Skills: ${edu.skills.join(", ")}</div>` : ''}
-                                </div>
-                            `;
-                        });
-                    } else {
-                        eduContainer.innerHTML = '<p class="text-muted small">No education details listed.</p>';
-                    }
+                    document.getElementById("editArea").value = student.area || "";
+                    document.getElementById("editTaluka").value = student.taluka || "";
+                    document.getElementById("editDistrict").value = student.district || "";
+                    document.getElementById("editPinCode").value = student.pinCode || "";
+                    document.getElementById("editSkills").value = skillsArray.join(", ");
                 })
                 .catch(err => {
                     console.error(err);
-                    alert("Failed to load profile.");
+                    alert("Failed to fetch candidate profile details.");
                 });
 
             // Save Action
             document.getElementById("saveProfileBtn").onclick = async () => {
                 const btn = document.getElementById("saveProfileBtn");
                 const originalText = btn.innerHTML;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Persisting Profile...';
                 btn.disabled = true;
 
                 try {
-                    // 1. Save Info Data
+                    // Collect text values
+                    const skillsVal = document.getElementById("editSkills").value;
+                    const parsedSkills = skillsVal.split(",")
+                        .map(s => s.trim())
+                        .filter(s => s.length > 0);
+
                     const infoData = {
                         fullName: document.getElementById("editFullName").value,
                         dob: document.getElementById("editDob").value,
                         mobile: document.getElementById("editMobile").value,
                         email: document.getElementById("editEmail").value,
                         city: document.getElementById("editCity").value,
-                        state: document.getElementById("editState").value
+                        state: document.getElementById("editState").value,
+                        area: document.getElementById("editArea").value,
+                        taluka: document.getElementById("editTaluka").value,
+                        district: document.getElementById("editDistrict").value,
+                        pinCode: document.getElementById("editPinCode").value,
+                        skills: parsedSkills
                     };
 
+                    // Send text update request
                     const updateRes = await fetch(`/students/update/${studentId}`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(infoData)
                     });
 
-                    if (!updateRes.ok) throw new Error("Failed to update text details");
+                    if (!updateRes.ok) throw new Error("Failed to update text details.");
 
-                    // 2. Save Uploads if selected
+                    // Handle files upload
                     const filePic = document.getElementById("editProfilePic").files[0];
                     const fileResume = document.getElementById("editResume").files[0];
+                    const fileTenth = document.getElementById("editTenth").files[0];
+                    const fileTwelfth = document.getElementById("editTwelfth").files[0];
+                    const fileFinalSem = document.getElementById("editFinalSem").files[0];
+                    const fileProvisional = document.getElementById("editProvisional").files[0];
+                    const fileApprentice = document.getElementById("editApprentice").files[0];
+                    const fileExperience = document.getElementById("editExperience").files[0];
 
-                    if (filePic || fileResume) {
+                    if (filePic || fileResume || fileTenth || fileTwelfth || fileFinalSem || fileProvisional || fileApprentice || fileExperience) {
                         const formData = new FormData();
                         if (filePic) formData.append("profilePic", filePic);
                         if (fileResume) formData.append("resume", fileResume);
+                        if (fileTenth) formData.append("tenthMarksheet", fileTenth);
+                        if (fileTwelfth) formData.append("twelfthMarksheet", fileTwelfth);
+                        if (fileFinalSem) formData.append("finalSemMarksheet", fileFinalSem);
+                        if (fileProvisional) formData.append("provisionalDegreeCertificate", fileProvisional);
+                        if (fileApprentice) formData.append("apprenticeCertificate", fileApprentice);
+                        if (fileExperience) formData.append("experienceCertificate", fileExperience);
 
                         const uploadRes = await fetch(`/students/${studentId}/upload`, {
                             method: "POST",
                             body: formData
                         });
 
-                        if (!uploadRes.ok) throw new Error("Failed to upload files");
+                        if (!uploadRes.ok) throw new Error("Failed to upload assets.");
                     }
 
-                    // Reload page to show new data
                     window.location.reload();
 
                 } catch (e) {

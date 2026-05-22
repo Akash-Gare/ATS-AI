@@ -6,9 +6,17 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    :root {
+      --linkedin-blue: #0a66c2;
+      --linkedin-dark-blue: #004182;
+      --bg-gray: #f3f2ef;
+      --text-dark: #191919;
+      --text-muted: #666666;
+    }
     body {
-      background-color: #f3f2ef;
+      background-color: var(--bg-gray);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text-dark);
     }
     .navbar {
       background-color: #ffffff;
@@ -16,12 +24,12 @@
       padding: 15px 0;
     }
     .navbar-brand {
-      color: #0a66c2 !important;
+      color: var(--linkedin-blue) !important;
       font-weight: 700;
       font-size: 1.6rem;
     }
     .reg-container {
-      max-width: 800px;
+      max-width: 850px;
       margin: 40px auto;
     }
     .card-box {
@@ -29,59 +37,86 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       padding: 40px;
+      border: 1px solid #e0dfdc;
     }
     .section-title {
       font-size: 1.25rem;
       font-weight: 600;
-      color: #191919;
+      color: var(--text-dark);
       margin-bottom: 20px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #e0dfdc;
       padding-bottom: 10px;
+    }
+    .section-title i {
+      color: var(--linkedin-blue);
     }
     .form-label {
       font-weight: 600;
-      color: #191919;
-      font-size: 0.9rem;
+      color: var(--text-dark);
+      font-size: 0.85rem;
       margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .form-control, .form-select {
-      border-radius: 4px;
-      border: 1px solid #00000099;
+      border-radius: 6px;
+      border: 1px solid #8f8f8f;
       padding: 10px;
+      background-color: #f8f9fa;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--linkedin-blue);
+      box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.25);
+      background-color: #fff;
     }
     .btn-primary {
-      background-color: #0a66c2;
+      background-color: var(--linkedin-blue);
       border: none;
       border-radius: 24px;
-      padding: 10px 30px;
-      font-weight: 600;
+      padding: 12px 30px;
+      font-weight: 700;
       font-size: 1.1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: var(--linkedin-dark-blue);
     }
     .btn-outline {
-      border: 1px solid #0a66c2;
-      color: #0a66c2;
+      border: 1px solid var(--linkedin-blue);
+      color: var(--linkedin-blue);
       background: transparent;
       border-radius: 24px;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 0.85rem;
       padding: 8px 20px;
+      transition: all 0.2s;
     }
     .btn-outline:hover {
       background-color: #e6f2fe;
+      color: var(--linkedin-dark-blue);
     }
     .entry-box {
-      border: 1px solid #e0e0e0;
+      border: 1px solid #e0dfdc;
       border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 15px;
-      background: #f9f9f9;
+      padding: 24px;
+      margin-bottom: 20px;
+      background: #faf9f6;
       position: relative;
     }
     .remove-btn {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 15px;
+      right: 15px;
       color: #dc3545;
       cursor: pointer;
+      font-size: 1.1rem;
+      transition: color 0.2s;
+    }
+    .remove-btn:hover {
+      color: #a71d2a;
     }
   </style>
 </head>
@@ -96,26 +131,26 @@
 
   <div class="container reg-container">
     <div class="text-center mb-5">
-      <h2 style="font-weight: 600; color: #191919;">Join ATS Connect and build your career</h2>
-      <p class="text-muted">Fill out your profile to start receiving AI-driven job matches.</p>
+      <h2 style="font-weight: 700; color: var(--text-dark);">Join ATS Connect and build your career</h2>
+      <p class="text-muted">Fill out your profile details to start receiving AI-driven job matches instantly.</p>
     </div>
 
     <div class="card-box">
       
-      <!-- Personal Info -->
+      <!-- 1. Personal Info -->
       <div class="section-title"><i class="fas fa-user me-2"></i> Personal Information</div>
       <div class="row g-3 mb-5">
         <div class="col-md-6">
           <label class="form-label">Full Name</label>
-          <input id="fullName" class="form-control" type="text" placeholder="e.g. John Doe">
+          <input id="fullName" class="form-control" type="text" placeholder="e.g. John Doe" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Email Address</label>
-          <input id="email" class="form-control" type="email" placeholder="e.g. john@example.com">
+          <input id="email" class="form-control" type="email" placeholder="e.g. john@example.com" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Password</label>
-          <input id="password" type="password" class="form-control" placeholder="••••••••">
+          <input id="password" type="password" class="form-control" placeholder="••••••••" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Mobile Number</label>
@@ -125,36 +160,65 @@
           <label class="form-label">Date of Birth</label>
           <input id="dob" type="date" class="form-control">
         </div>
-        <div class="col-md-3">
-          <label class="form-label">City</label>
-          <input id="city" class="form-control" placeholder="e.g. Mumbai">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">State</label>
-          <input id="state" class="form-control" placeholder="e.g. Maharashtra">
+        <div class="col-md-6">
+          <label class="form-label">Primary Trade / Profession</label>
+          <input id="trade" class="form-control" placeholder="e.g. Electrician / CNC Operator">
         </div>
       </div>
 
-      <!-- Education Section -->
+      <!-- 2. Address Details -->
+      <div class="section-title"><i class="fas fa-map-location-dot me-2"></i> Address & Skills Details</div>
+      <div class="row g-3 mb-5">
+        <div class="col-md-6">
+          <label class="form-label">Area / Locality</label>
+          <input id="area" class="form-control" placeholder="e.g. Baner / Shivaji Nagar">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Taluka</label>
+          <input id="taluka" class="form-control" placeholder="e.g. Haveli">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">District</label>
+          <input id="district" class="form-control" placeholder="e.g. Pune">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">City</label>
+          <input id="city" class="form-control" placeholder="e.g. Pune" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">State</label>
+          <input id="state" class="form-control" placeholder="e.g. Maharashtra" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Pin Code</label>
+          <input id="pinCode" class="form-control" placeholder="e.g. 411045">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Core Skills (comma-separated)</label>
+          <input id="skills" class="form-control" placeholder="e.g. Wiring, Maintenance, Safety, MS Office">
+        </div>
+      </div>
+
+      <!-- 3. Education Section -->
       <div class="section-title d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-graduation-cap me-2"></i> Education</span>
+        <span><i class="fas fa-graduation-cap me-2"></i> Education details</span>
         <button class="btn btn-sm btn-outline" onclick="addEducation()">+ Add Education</button>
       </div>
       <div id="education-container" class="mb-5">
         <!-- Education entries will be added here -->
       </div>
 
-      <!-- Experience Section -->
+      <!-- 4. Experience Section -->
       <div class="section-title d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-briefcase me-2"></i> Experience</span>
+        <span><i class="fas fa-history me-2"></i> Professional Experience</span>
         <button class="btn btn-sm btn-outline" onclick="addExperience()">+ Add Experience</button>
       </div>
       <div id="experience-container" class="mb-5">
         <!-- Experience entries will be added here -->
       </div>
 
-      <!-- Preferences -->
-      <div class="section-title"><i class="fas fa-heart me-2"></i> Job Preferences</div>
+      <!-- 5. Job Preferences -->
+      <div class="section-title"><i class="fas fa-bullseye me-2"></i> Job Preferences</div>
       <div class="row g-3 mb-5">
         <div class="col-md-6">
           <label class="form-label">Expected Monthly Salary (₹)</label>
@@ -166,9 +230,48 @@
         </div>
       </div>
 
+      <!-- 6. Upload Documents -->
+      <div class="section-title"><i class="fas fa-folder-open me-2"></i> Upload Documents (Optional)</div>
+      <div class="row g-3 mb-5">
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-image text-muted me-1"></i> Profile Photo</label>
+          <input id="fileProfilePic" class="form-control" type="file" accept="image/png, image/jpeg">
+          <div class="form-text small text-muted">Upload JPG, PNG (Max 5MB)</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-file-pdf text-muted me-1"></i> Resume Document</label>
+          <input id="fileResume" class="form-control" type="file" accept=".pdf,.doc,.docx">
+          <div class="form-text small text-muted">Upload PDF, DOC, DOCX (Max 5MB)</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-file-invoice text-muted me-1"></i> 10th Marksheet</label>
+          <input id="fileTenth" class="form-control" type="file" accept=".pdf,.png,.jpg,.jpeg">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-file-invoice text-muted me-1"></i> 12th Marksheet</label>
+          <input id="fileTwelfth" class="form-control" type="file" accept=".pdf,.png,.jpg,.jpeg">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-file-signature text-muted me-1"></i> Final Semester Marksheet</label>
+          <input id="fileFinalSem" class="form-control" type="file" accept=".pdf,.png,.jpg,.jpeg">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-graduation-cap text-muted me-1"></i> Provisional Degree Certificate</label>
+          <input id="fileProvisional" class="form-control" type="file" accept=".pdf,.png,.jpg,.jpeg">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-certificate text-muted me-1"></i> Apprentice Certificate</label>
+          <input id="fileApprentice" class="form-control" type="file" accept=".pdf,.png,.jpg,.jpeg">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="fas fa-briefcase text-muted me-1"></i> Experience Certificate</label>
+          <input id="fileExperience" class="form-control" type="file" accept=".pdf,.png,.jpg,.jpeg">
+        </div>
+      </div>
+
       <div class="text-center mt-4">
-        <button id="regBtn" class="btn btn-primary w-100 mb-3" onclick="register()">Agree & Join</button>
-        <p class="small text-muted">Already on ATS Connect? <a href="login.html" class="text-decoration-none">Sign in</a></p>
+        <button id="regBtn" class="btn btn-primary w-100 mb-3 fw-bold" onclick="register()">Agree & Create Profile</button>
+        <p class="small text-muted mb-0">Already on ATS Connect? <a href="login.html" class="text-decoration-none fw-bold">Sign in</a></p>
       </div>
 
     </div>
@@ -205,11 +308,19 @@
               <input class="form-control edu-year" type="number" placeholder="2022">
             </div>
             <div class="col-md-3">
-              <label class="form-label">Board</label>
+              <label class="form-label">Board / University</label>
               <input class="form-control edu-board" placeholder="e.g. SSC/HSC">
             </div>
+            <div class="col-md-6">
+              <label class="form-label">Roll Number</label>
+              <input class="form-control edu-roll" placeholder="e.g. R-10293">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Certificate / Marksheet Number</label>
+              <input class="form-control edu-cert" placeholder="e.g. CERT-98203">
+            </div>
             <div class="col-12">
-              <label class="form-label">Key Skills (Comma separated)</label>
+              <label class="form-label">Key Skills Acquired (Comma separated)</label>
               <input class="form-control edu-skills" placeholder="e.g. Wiring, Maintenance, Safety">
             </div>
           </div>
@@ -233,8 +344,8 @@
               <input class="form-control exp-company" placeholder="e.g. Tata Motors">
             </div>
             <div class="col-md-12">
-              <label class="form-label">Job Description</label>
-              <textarea class="form-control exp-desc" rows="2" placeholder="Briefly describe your role..."></textarea>
+              <label class="form-label">Job Description / Responsibilities</label>
+              <textarea class="form-control exp-desc" rows="2" placeholder="Briefly describe your role and major accomplishments..."></textarea>
             </div>
           </div>
         </div>`;
@@ -247,8 +358,13 @@
     function register() {
       const btn = document.getElementById("regBtn");
       
+      const skillsVal = document.getElementById("skills").value;
+      const parsedSkills = skillsVal.split(",")
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
       const payload = {
-        userId: document.getElementById("email").value, // Using email as userId for now
+        userId: document.getElementById("email").value,
         fullName: document.getElementById("fullName").value,
         email: document.getElementById("email").value,
         password: document.getElementById("password").value,
@@ -256,6 +372,17 @@
         dob: document.getElementById("dob").value,
         city: document.getElementById("city").value,
         state: document.getElementById("state").value,
+        area: document.getElementById("area").value,
+        taluka: document.getElementById("taluka").value,
+        district: document.getElementById("district").value,
+        pinCode: document.getElementById("pinCode").value,
+        trade: document.getElementById("trade").value,
+        skills: parsedSkills,
+        profilePhoto: "",
+        instituteId: "",
+        savedJobs: [],
+        applicationStatus: "Not Applied",
+        placementStatus: "Not Placed",
         education: [],
         experience: [],
         preferences: {
@@ -265,7 +392,7 @@
         isProfileComplete: true
       };
 
-      // Gather Education
+      // Gather Education Timeline
       document.querySelectorAll(".education-entry").forEach(el => {
         payload.education.push({
           educationType: el.querySelector(".edu-type").value,
@@ -273,22 +400,25 @@
           trade: el.querySelector(".edu-trade").value,
           passingYear: parseInt(el.querySelector(".edu-year").value || 0),
           boardName: el.querySelector(".edu-board").value,
+          rollNumber: el.querySelector(".edu-roll").value || "",
+          certificateNumber: el.querySelector(".edu-cert").value || "",
           skills: el.querySelector(".edu-skills").value.split(",").map(s => s.trim()).filter(s => s !== "")
         });
       });
 
-      // Gather Experience
+      // Gather Experience Timeline
       document.querySelectorAll(".experience-entry").forEach(el => {
         payload.experience.push({
           jobTitle: el.querySelector(".exp-title").value,
           companyName: el.querySelector(".exp-company").value,
           jobDescription: el.querySelector(".exp-desc").value,
-          isCurrentlyWorking: false
+          isCurrentlyWorking: false,
+          employmentType: "Full time"
         });
       });
 
-      if (!payload.fullName || !payload.email || !payload.password) {
-        alert("Name, Email, and Password are required!");
+      if (!payload.fullName || !payload.email || !payload.password || !payload.city || !payload.state) {
+        alert("Name, Email, Password, City, and State are mandatory fields!");
         return;
       }
 
@@ -300,15 +430,55 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
-      .then(res => res.json())
-      .then(data => {
+      .then(async res => {
+        if (!res.ok) throw new Error("Registration text data failed");
+        return res.json();
+      })
+      .then(async data => {
+        const studentId = data.student_id;
+        if (!studentId) throw new Error("No student ID returned");
+
+        // Collect documents for upload
+        const filePic = document.getElementById("fileProfilePic").files[0];
+        const fileResume = document.getElementById("fileResume").files[0];
+        const fileTenth = document.getElementById("fileTenth").files[0];
+        const fileTwelfth = document.getElementById("fileTwelfth").files[0];
+        const fileFinalSem = document.getElementById("fileFinalSem").files[0];
+        const fileProvisional = document.getElementById("fileProvisional").files[0];
+        const fileApprentice = document.getElementById("fileApprentice").files[0];
+        const fileExperience = document.getElementById("fileExperience").files[0];
+
+        if (filePic || fileResume || fileTenth || fileTwelfth || fileFinalSem || fileProvisional || fileApprentice || fileExperience) {
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading Documents...';
+          const formData = new FormData();
+          if (filePic) formData.append("profilePic", filePic);
+          if (fileResume) formData.append("resume", fileResume);
+          if (fileTenth) formData.append("tenthMarksheet", fileTenth);
+          if (fileTwelfth) formData.append("twelfthMarksheet", fileTwelfth);
+          if (fileFinalSem) formData.append("finalSemMarksheet", fileFinalSem);
+          if (fileProvisional) formData.append("provisionalDegreeCertificate", fileProvisional);
+          if (fileApprentice) formData.append("apprenticeCertificate", fileApprentice);
+          if (fileExperience) formData.append("experienceCertificate", fileExperience);
+
+          const uploadRes = await fetch(`/students/${studentId}/upload`, {
+            method: "POST",
+            body: formData
+          });
+
+          if (!uploadRes.ok) {
+            console.error("Document upload failed");
+            alert("Profile created, but document upload failed. You can re-upload them on your profile page.");
+          }
+        }
+
         alert("Registration Successful!");
         window.location.href = "login.html";
       })
       .catch(e => {
-        btn.innerHTML = 'Agree & Join';
+        console.error(e);
+        btn.innerHTML = 'Agree & Create Profile';
         btn.disabled = false;
-        alert("Registration Failed. Please try again.");
+        alert("Registration failed. Please review your entries and try again.");
       });
     }
   </script>

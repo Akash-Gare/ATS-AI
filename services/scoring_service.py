@@ -40,28 +40,81 @@ def calculate_skills_similarity(student_skills, job_required_skills):
     sem, exact = get_skill_components(student_skills, job_required_skills)
     return round((0.66 * sem) + (0.34 * exact), 2)
 
-def calculate_job_match(student, job):
+def get_location_match_and_priority(student, job):
+    """
+    Computes location match score, priority level, and distance based on coordinates
+    with fallback to textual matching.
+    Returns: (location_score, location_priority, distance_km)
+    """
+    from services.location_service import calculate_distance, get_location_score
+    
+    student_lat = student.get("latitude")
+    student_lon = student.get("longitude")
+    job_lat = job.get("latitude")
+    job_lon = job.get("longitude")
+    
+    # 1. Coordinate-based matching
+    if student_lat is not None and student_lon is not None and job_lat is not None and job_lon is not None:
+        distance_km = calculate_distance((student_lat, student_lon), (job_lat, job_lon))
+        if distance_km is not None:
+            score = get_location_score(distance_km)
+            # Map distance to priority
+            if distance_km <= 10.0:
+                priority = 3
+            elif distance_km <= 50.0:
+                priority = 2
+            elif distance_km <= 200.0:
+                priority = 1
+            else:
+                priority = 0
+            return score, priority, distance_km
+
+    # 2. Textual Fallback if coordinates missing/failed
+    student_city = (student.get("city") or "").strip().lower()
+    student_state = (student.get("state") or "").strip().lower()
+    
+    job_addr = job.get("address") or {}
+    job_city = (job_addr.get("city") or job.get("location") or "").strip().lower()
+    job_state = (job_addr.get("state") or "").strip().lower()
+    
+    if student_city and job_city and student_city == job_city:
+        return 70, 3, None
+    elif student_state and job_state and student_state == job_state:
+        return 40, 1, None
+        
+    return 0, 0, None
+
+
+def calculate_job_match(student, job, return_priority=False):
     # Pull skills from ALL education entries
     student_skills = []
-    for e in student.get("education", []):
-        student_skills.extend(e.get("skills", []))
+    education_entries = student.get("education", []) or []
+    for e in education_entries:
+        skills = e.get("skills")
+        if isinstance(skills, list):
+            student_skills.extend([s for s in skills if s])
     
     # If no explicit skills, pull from trade names
     if not student_skills:
-        student_skills = [e.get("trade", "") for e in student.get("education", [])]
+        student_skills = [e.get("trade") or "" for e in education_entries]
+        student_skills = [t for t in student_skills if t]
         
-    job_skills = job.get("requiredSkills", [])
+    job_skills = job.get("requiredSkills") or []
+    if not isinstance(job_skills, list):
+        job_skills = []
+    job_skills = [s for s in job_skills if s]
     
     # Get the raw similarity and exact overlap out of 100
     semantic_score, exact_match_score = get_skill_components(student_skills, job_skills)
     
     # Calculate 'Other' metrics (Trade, Experience, Location)
     # Check all trades from education list
-    student_trades = [e.get("trade", "").lower() for e in student.get("education", [])]
+    student_trades = [e.get("trade") or "" for e in education_entries]
+    student_trades = [t.lower() for t in student_trades if t]
     
-    job_title = job.get("jobTitle", "").lower()
-    job_trade = job.get("trade", "").lower()
-    job_desc = job.get("jobDescription", "").lower()
+    job_title = (job.get("jobTitle") or job.get("job_title") or "").lower()
+    job_trade = (job.get("trade") or "").lower()
+    job_desc = (job.get("jobDescription") or "").lower()
     
     # Trade match: check if ANY of student's trades are relevant to the job
     trade_match = 0
@@ -72,27 +125,32 @@ def calculate_job_match(student, job):
     
     # Experience match: 
     # Calculate total experience years from the experience list
-    total_exp_years = len(student.get("experience", [])) # simple heuristic: count roles
-    # Better: each role is roughly 1-2 years? Or just check if they HAVE experience for "Experienced" jobs.
-    job_exp_level = job.get("experienceLevel", "Fresher")
+    experience_entries = student.get("experience", []) or []
+    total_exp_years = len(experience_entries) # simple heuristic: count roles
+    
+    job_exp_level = job.get("experienceLevel", "Fresher") or "Fresher"
     
     if job_exp_level == "Fresher":
         exp_score = 100 if total_exp_years <= 1 else 50
     else:  # Experienced
         exp_score = 100 if total_exp_years >= 1 else 0
         
-    student_city = student.get("city", "").lower()
-    student_state = student.get("state", "").lower()
+    # Get location score, priority level, and distance
+    location_score, location_priority, distance_km = get_location_match_and_priority(student, job)
     
-    job_addr = job.get("address", {})
-    job_city = str(job_addr.get("city", "")).lower()
+    # Final Score formula under new specifications:
+    # final_score = (0.50 * semantic_score) + (0.25 * exact_match_score) + (0.10 * trade_match) + (0.10 * exp_score) + (0.05 * location_score)
+    final_score = (
+        (0.50 * semantic_score) +
+        (0.25 * exact_match_score) +
+        (0.10 * trade_match) +
+        (0.10 * exp_score) +
+        (0.05 * location_score)
+    )
     
-    loc_match = 100 if (student_city and job_city and student_city == job_city) else 0
+    final_score_rounded = round(final_score, 2)
     
-    # Average the other attributes together
-    other_score = (trade_match + exp_score + loc_match) / 3.0
-    
-    # Final Score spec: 60% similarity, 30% skill overlapping, 10% other
-    final_score = (0.60 * semantic_score) + (0.30 * exact_match_score) + (0.10 * other_score)
-    
-    return round(final_score, 2)
+    if return_priority:
+        return final_score_rounded, location_priority, distance_km
+    return final_score_rounded
+

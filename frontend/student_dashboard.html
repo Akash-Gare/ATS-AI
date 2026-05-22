@@ -228,14 +228,52 @@
           <div class="row mb-4">
             <div class="col-sm-4 mb-2"><div class="p-3 bg-light rounded text-center"><i class="fas fa-briefcase d-block text-muted mb-1"></i><strong id="modalExp"></strong> <small>Exp</small></div></div>
             <div class="col-sm-4 mb-2"><div class="p-3 bg-light rounded text-center"><i class="fas fa-clock d-block text-muted mb-1"></i><strong id="modalType"></strong> <small>Type</small></div></div>
-            <div class="col-sm-4 mb-2"><div class="p-3 bg-light rounded text-center"><i class="fas fa-dollar-sign d-block text-muted mb-1"></i><strong id="modalSalary"></strong> <small>Salary</small></div></div>
+            <div class="col-sm-4 mb-2"><div class="p-3 bg-light rounded text-center"><i class="fas fa-money-bill-wave d-block text-muted mb-1"></i><strong id="modalSalary"></strong> <small>Salary</small></div></div>
+          </div>
+
+          <h6 class="fw-bold border-bottom pb-2 mb-3">Job Overview</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <ul class="list-unstyled mb-0" style="font-size: 0.9rem;">
+                <li class="mb-2"><i class="fas fa-id-card text-primary me-2"></i> <strong>Employer ID:</strong> <span id="modalEmployerId" class="text-muted">N/A</span></li>
+                <li class="mb-2"><i class="fas fa-tools text-primary me-2"></i> <strong>Trade:</strong> <span id="modalTrade" class="text-muted">N/A</span></li>
+                <li class="mb-2"><i class="fas fa-users text-primary me-2"></i> <strong>Vacancies:</strong> <span id="modalVacancies" class="text-muted">N/A</span></li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <ul class="list-unstyled mb-0" style="font-size: 0.9rem;">
+                <li class="mb-2"><i class="fas fa-graduation-cap text-primary me-2"></i> <strong>Education Level:</strong> <span id="modalEducation" class="text-muted">N/A</span></li>
+                <li class="mb-2"><i class="fas fa-history text-primary me-2"></i> <strong>Exp Requirements:</strong> <span id="modalExpReq" class="text-muted">N/A</span></li>
+                <li class="mb-2"><i class="fas fa-info-circle text-primary me-2"></i> <strong>Status:</strong> <span id="modalStatus" class="badge bg-success">ACTIVE</span></li>
+              </ul>
+            </div>
           </div>
 
           <h6 class="fw-bold border-bottom pb-2 mb-3">Required Skills</h6>
           <div id="modalSkills" class="mb-4"></div>
 
+          <div id="modalPreferredSkillsSection" class="mb-4" style="display:none;">
+            <h6 class="fw-bold border-bottom pb-2 mb-3">Preferred Skills</h6>
+            <div id="modalPreferredSkills"></div>
+          </div>
+
           <h6 class="fw-bold border-bottom pb-2 mb-3">Job Description</h6>
-          <div id="modalDescription" class="text-muted" style="font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;"></div>
+          <div id="modalDescription" class="text-muted mb-4" style="font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;"></div>
+
+          <div id="modalResponsibilitiesSection" class="mb-4" style="display:none;">
+            <h6 class="fw-bold border-bottom pb-2 mb-3">Responsibilities</h6>
+            <ul id="modalResponsibilities" class="text-muted ps-3" style="font-size: 0.9rem; line-height: 1.6;"></ul>
+          </div>
+
+          <div id="modalCertificationsSection" class="mb-4" style="display:none;">
+            <h6 class="fw-bold border-bottom pb-2 mb-3">Certifications Expected</h6>
+            <ul id="modalCertifications" class="text-muted ps-3" style="font-size: 0.9rem; line-height: 1.6;"></ul>
+          </div>
+
+          <div id="modalBenefitsSection" class="mb-4" style="display:none;">
+            <h6 class="fw-bold border-bottom pb-2 mb-3">Benefits & Perks</h6>
+            <ul id="modalBenefits" class="text-muted ps-3" style="font-size: 0.9rem; line-height: 1.6;"></ul>
+          </div>
         </div>
         <div class="modal-footer justify-content-between bg-light border-0">
           <div id="modalMatchBadge"></div>
@@ -391,7 +429,8 @@
             </div>
             
             <p class="text-muted mt-2 mb-3" style="font-size: 0.85rem; line-height: 1.5;">
-              <i class="fas fa-map-marker-alt me-1"></i> ${job.location || 'Remote'} &bull; 
+              <i class="fas fa-map-marker-alt me-1"></i> ${job.location || 'Remote'} 
+              ${job.distance_km !== null && job.distance_km !== undefined ? ` &bull; 📍 ${job.distance_km} KM away` : ''} &bull; 
               <i class="fas fa-briefcase me-1"></i> ${job.experienceLevel || job.min_experience || 0} yrs &bull; 
               <i class="fas fa-clock me-1"></i> ${job.jobType || 'Full-time'}
             </p>
@@ -426,18 +465,94 @@
        const job = allJobs[index];
        document.getElementById("modalJobTitle").innerText = job.job_title || job.jobTitle || 'Untitled';
        document.getElementById("modalCompany").innerText = job.company || 'Unknown Company';
-       document.getElementById("modalLocation").innerText = job.location || 'Remote';
+       
+       // Handle nested address formatting
+       let locationText = job.location || 'Remote';
+       if (job.address && typeof job.address === 'object' && job.address.city) {
+         locationText = `${job.address.city}, ${job.address.state || ''} (Pin: ${job.address.pincode || ''})`;
+       }
+       if (job.distance_km !== null && job.distance_km !== undefined) {
+         locationText += ` (📍 ${job.distance_km} KM away)`;
+       }
+       document.getElementById("modalLocation").innerText = locationText;
+       
        document.getElementById("modalCompanyLogo").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company || 'Co')}&background=random&color=fff&size=64&rounded=true`;
        
        document.getElementById("modalExp").innerText = (job.experienceLevel || job.min_experience || 0) + "+";
        document.getElementById("modalType").innerText = job.jobType || 'Full-time';
-       document.getElementById("modalSalary").innerText = job.salary || job.salaryRange || 'Competitive';
+       
+       // Handle nested salary formatting
+       let salaryText = 'Competitive';
+       if (job.salary) {
+         if (typeof job.salary === 'object' && job.salary.min !== undefined && job.salary.max !== undefined) {
+           salaryText = `Rs. ${job.salary.min.toLocaleString()} - Rs. ${job.salary.max.toLocaleString()}`;
+         } else if (typeof job.salary === 'string') {
+           salaryText = job.salary;
+         }
+       }
+       document.getElementById("modalSalary").innerText = salaryText;
 
+       // Set basic specifications
+       document.getElementById("modalEmployerId").innerText = job.employerId || 'N/A';
+       document.getElementById("modalTrade").innerText = job.trade || 'N/A';
+       document.getElementById("modalVacancies").innerText = job.numberOfVacancies || 'N/A';
+       document.getElementById("modalEducation").innerText = job.educationLevel || 'N/A';
+       document.getElementById("modalExpReq").innerText = job.experienceRequirements || 'N/A';
+       
+       const statusBadge = document.getElementById("modalStatus");
+       statusBadge.innerText = (job.status || 'active').toUpperCase();
+       if ((job.status || 'active').toLowerCase() === 'active') {
+         statusBadge.className = "badge bg-success";
+       } else {
+         statusBadge.className = "badge bg-secondary";
+       }
+
+       // Required Skills
        const skills = (job.requiredSkills || job.required_skills || []);
        document.getElementById("modalSkills").innerHTML = skills.map(s => `<span class="badge bg-secondary me-1 mb-1">${s}</span>`).join('');
        
+       // Preferred Skills Section
+       const preferredSkills = job.preferredSkills || [];
+       const prefSection = document.getElementById("modalPreferredSkillsSection");
+       if (preferredSkills.length > 0) {
+         prefSection.style.display = "block";
+         document.getElementById("modalPreferredSkills").innerHTML = preferredSkills.map(s => `<span class="badge bg-info text-dark me-1 mb-1">${s}</span>`).join('');
+       } else {
+         prefSection.style.display = "none";
+       }
+
        document.getElementById("modalDescription").innerText = job.description || job.jobDescription || 'No description provided.';
        
+       // Responsibilities Section
+       const responsibilities = job.responsibilities || [];
+       const respSection = document.getElementById("modalResponsibilitiesSection");
+       if (responsibilities.length > 0) {
+         respSection.style.display = "block";
+         document.getElementById("modalResponsibilities").innerHTML = responsibilities.map(r => `<li class="mb-1">${r}</li>`).join('');
+       } else {
+         respSection.style.display = "none";
+       }
+
+       // Certifications Section
+       const certifications = job.certifications || [];
+       const certSection = document.getElementById("modalCertificationsSection");
+       if (certifications.length > 0) {
+         certSection.style.display = "block";
+         document.getElementById("modalCertifications").innerHTML = certifications.map(c => `<li class="mb-1">${c}</li>`).join('');
+       } else {
+         certSection.style.display = "none";
+       }
+
+       // Benefits Section
+       const benefits = job.benefits || [];
+       const benSection = document.getElementById("modalBenefitsSection");
+       if (benefits.length > 0) {
+         benSection.style.display = "block";
+         document.getElementById("modalBenefits").innerHTML = benefits.map(b => `<li class="mb-1">${b}</li>`).join('');
+       } else {
+         benSection.style.display = "none";
+       }
+
        let matchBadgeHtml = '';
        if (job.score !== null && job.score !== undefined) {
          matchBadgeHtml = `<span class="badge bg-success px-3 py-2"><i class="fas fa-bolt text-white me-1"></i> ${job.score}% Match</span>`;

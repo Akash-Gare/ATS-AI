@@ -95,11 +95,15 @@
 
       <div class="row g-3">
         <!-- Basic Info -->
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label class="form-label">Company Name</label>
           <input id="company" class="form-control" placeholder="e.g. Acme Corp">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+          <label class="form-label">Employer ID</label>
+          <input id="employerId" class="form-control" placeholder="e.g. emp_001">
+        </div>
+        <div class="col-md-4">
           <label class="form-label">Job Title</label>
           <input id="title" class="form-control" placeholder="e.g. Wireman">
         </div>
@@ -125,17 +129,45 @@
           </select>
         </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Location</label>
+        <!-- Address & Location -->
+        <div class="col-md-3">
+          <label class="form-label">Location (Display)</label>
           <input id="location" class="form-control" placeholder="e.g. Mumbai, India">
         </div>
         <div class="col-md-3">
+          <label class="form-label">City</label>
+          <input id="city" class="form-control" placeholder="e.g. Pune">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">State</label>
+          <input id="state" class="form-control" placeholder="e.g. Maharashtra">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Pincode</label>
+          <input id="pincode" class="form-control" placeholder="e.g. 411001">
+        </div>
+
+        <!-- Vacancies, Experience, & Salary -->
+        <div class="col-md-4">
           <label class="form-label">Number of Vacancies</label>
           <input id="vacancies" type="number" class="form-control" value="1" min="1">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label class="form-label">Minimum Experience (Years)</label>
           <input id="exp" type="number" class="form-control" placeholder="0">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Experience Requirements</label>
+          <input id="experienceRequirements" class="form-control" placeholder="e.g. 0-1 years">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Minimum Salary</label>
+          <input id="salaryMin" type="number" class="form-control" placeholder="e.g. 15000">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Maximum Salary</label>
+          <input id="salaryMax" type="number" class="form-control" placeholder="e.g. 25000">
         </div>
         
         <!-- Job Details -->
@@ -186,18 +218,45 @@
   </div>
 
   <script>
+    // Automatically pre-fill the location display field from city for ease of use
+    document.getElementById("city").addEventListener("input", function() {
+      const locInput = document.getElementById("location");
+      if (!locInput.dataset.edited) {
+        locInput.value = this.value;
+      }
+    });
+    document.getElementById("location").addEventListener("input", function() {
+      this.dataset.edited = "true";
+    });
+
     function postJob() {
       const btn = document.getElementById("submitBtn");
 
+      const cityVal = document.getElementById("city").value;
+      const stateVal = document.getElementById("state").value;
+      const pincodeVal = document.getElementById("pincode").value;
+
       const payload = {
         company: document.getElementById("company").value,
+        employerId: document.getElementById("employerId").value,
         jobTitle: document.getElementById("title").value,
         trade: document.getElementById("trade").value,
         jobType: document.getElementById("jobType").value,
         experienceLevel: document.getElementById("experienceLevel").value,
-        location: document.getElementById("location").value,
+        address: {
+          city: cityVal,
+          state: stateVal,
+          pincode: pincodeVal
+        },
+        locations: [cityVal],
+        location: document.getElementById("location").value || cityVal,
+        salary: {
+          min: parseInt(document.getElementById("salaryMin").value) || 0,
+          max: parseInt(document.getElementById("salaryMax").value) || 0
+        },
         numberOfVacancies: parseInt(document.getElementById("vacancies").value) || 1,
         min_experience: parseInt(document.getElementById("exp").value) || 0,
+        experienceRequirements: document.getElementById("experienceRequirements").value,
         jobDescription: document.getElementById("desc").value,
         responsibilities: document.getElementById("responsibilities").value.split(",").map(s => s.trim()).filter(s => s !== ""),
         requiredSkills: document.getElementById("requiredSkills").value.split(",").map(s => s.trim()).filter(s => s !== ""),
@@ -209,8 +268,8 @@
         status: "active"
       };
 
-      if (!payload.company || !payload.jobTitle || !payload.jobDescription || payload.requiredSkills.length === 0) {
-        alert("Please fill in Company Name, Job Title, Description, and Required Skills.");
+      if (!payload.company || !payload.employerId || !payload.jobTitle || !payload.jobDescription || payload.requiredSkills.length === 0 || !cityVal || !stateVal || !pincodeVal) {
+        alert("Please fill in Company Name, Employer ID, Job Title, City, State, Pincode, Description, and Required Skills.");
         return;
       }
 

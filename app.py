@@ -20,6 +20,7 @@ SMTP_EMAIL = os.getenv("SMTP_EMAIL", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 
 from services.scoring_service import calculate_skills_similarity, calculate_job_match
+from services.location_service import get_coordinates_from_pincode
 
 app = FastAPI(title="ATS AI Engine")
 
@@ -30,6 +31,7 @@ app.mount("/ui", StaticFiles(directory="frontend", html=True), name="frontend")
 os.makedirs("uploads/profile_pics", exist_ok=True)
 os.makedirs("uploads/resumes", exist_ok=True)
 os.makedirs("uploads/reports", exist_ok=True)
+os.makedirs("uploads/documents", exist_ok=True)
 
 # Serve uploads
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -43,6 +45,8 @@ class Education(BaseModel):
     skills: List[str] = []
     instituteName: str
     passingYear: int
+    rollNumber: str = ""
+    certificateNumber: str = ""
 
 class Experience(BaseModel):
     companyName: str
@@ -64,20 +68,41 @@ class Student(BaseModel):
     dob: str = ""
     city: str
     state: str
+    profilePhoto: str = ""
+    pinCode: str = ""
+    area: str = ""
+    taluka: str = ""
+    district: str = ""
+    trade: str = ""
+    skills: List[str] = []
+    instituteId: str = ""
+    documents: Optional[dict] = {
+        "tenthMarksheet": None,
+        "twelfthMarksheet": None,
+        "finalSemMarksheet": None,
+        "provisionalDegreeCertificate": None,
+        "apprenticeCertificate": None,
+        "experienceCertificate": None
+    }
+    savedJobs: List[str] = []
+    applicationStatus: str = "Not Applied"
+    placementStatus: str = "Not Placed"
     education: List[Education] = []
     experience: List[Experience] = []
     preferences: Optional[Preferences] = None
     isProfileComplete: bool = False
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class Address(BaseModel):
-    city: str = ""
-    state: str = ""
-    pincode: str = ""
+    city: str
+    state: str
+    pincode: str
 
 class Salary(BaseModel):
-    min: int = 0
-    max: int = 0
+    min: int
+    max: int
 
 class Job(BaseModel):
     company: str = ""
@@ -86,10 +111,10 @@ class Job(BaseModel):
     trade: str = ""
     jobType: str = ""
     experienceLevel: str = ""
-    address: dict = {} 
-    locations: list = []
+    address: Address
+    locations: List[str] = []
     location: str = ""
-    salary: dict = {}
+    salary: Salary
     numberOfVacancies: int = 1
     jobDescription: str = ""
     responsibilities: List[str] = []
@@ -103,6 +128,8 @@ class Job(BaseModel):
     additionalInfo: str = ""
     status: str = "active"
     totalApplicants: int = 0
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 #--------Login--------#
 
@@ -171,7 +198,12 @@ def sync_chromadb():
 
 @app.post("/students/register")
 def register_student(student: Student):
-    result = students_collection.insert_one(student.dict())
+    student_dict = student.dict()
+    if student.pinCode:
+        lat, lon = get_coordinates_from_pincode(student.pinCode)
+        student_dict["latitude"] = lat
+        student_dict["longitude"] = lon
+    result = students_collection.insert_one(student_dict)
     return {
         "message": "Student registered successfully",
         "student_id": str(result.inserted_id)
@@ -201,6 +233,13 @@ class StudentUpdate(BaseModel):
     email: str = ""
     city: str = ""
     state: str = ""
+    area: str = ""
+    taluka: str = ""
+    district: str = ""
+    pinCode: str = ""
+    skills: List[str] = []
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class ForgotPasswordRequest(BaseModel):
     email: str
@@ -314,16 +353,28 @@ def update_student(student_id: str, data: StudentUpdate):
     if not ObjectId.is_valid(student_id):
         raise HTTPException(status_code=400, detail="Invalid student id")
     
+    update_fields = {
+        "fullName": data.fullName,
+        "dob": data.dob,
+        "mobile": data.mobile,
+        "email": data.email,
+        "city": data.city,
+        "state": data.state,
+        "area": data.area,
+        "taluka": data.taluka,
+        "district": data.district,
+        "pinCode": data.pinCode,
+        "skills": data.skills
+    }
+    
+    if data.pinCode:
+        lat, lon = get_coordinates_from_pincode(data.pinCode)
+        update_fields["latitude"] = lat
+        update_fields["longitude"] = lon
+        
     result = students_collection.update_one(
         {"_id": ObjectId(student_id)},
-        {"$set": {
-            "fullName": data.fullName,
-            "dob": data.dob,
-            "mobile": data.mobile,
-            "email": data.email,
-            "city": data.city,
-            "state": data.state
-        }}
+        {"$set": update_fields}
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -335,7 +386,13 @@ def update_student(student_id: str, data: StudentUpdate):
 def upload_files(
     student_id: str,
     profilePic: Optional[UploadFile] = File(None),
-    resume: Optional[UploadFile] = File(None)
+    resume: Optional[UploadFile] = File(None),
+    tenthMarksheet: Optional[UploadFile] = File(None),
+    twelfthMarksheet: Optional[UploadFile] = File(None),
+    finalSemMarksheet: Optional[UploadFile] = File(None),
+    provisionalDegreeCertificate: Optional[UploadFile] = File(None),
+    apprenticeCertificate: Optional[UploadFile] = File(None),
+    experienceCertificate: Optional[UploadFile] = File(None)
 ):
     if not ObjectId.is_valid(student_id):
         raise HTTPException(status_code=400, detail="Invalid student id")
@@ -348,6 +405,7 @@ def upload_files(
         with open(pic_path, "wb") as buffer:
             shutil.copyfileobj(profilePic.file, buffer)
         update_data["profilePicUrl"] = f"/uploads/profile_pics/{pic_filename}"
+        update_data["profilePhoto"] = f"/uploads/profile_pics/{pic_filename}"
         
     if resume:
         resume_filename = f"{student_id}_{resume.filename}"
@@ -355,6 +413,24 @@ def upload_files(
         with open(resume_path, "wb") as buffer:
             shutil.copyfileobj(resume.file, buffer)
         update_data["resumeUrl"] = f"/uploads/resumes/{resume_filename}"
+        
+    # Handle the 6 academic and experience documents
+    doc_files = {
+        "tenthMarksheet": tenthMarksheet,
+        "twelfthMarksheet": twelfthMarksheet,
+        "finalSemMarksheet": finalSemMarksheet,
+        "provisionalDegreeCertificate": provisionalDegreeCertificate,
+        "apprenticeCertificate": apprenticeCertificate,
+        "experienceCertificate": experienceCertificate
+    }
+    
+    for doc_key, file_obj in doc_files.items():
+        if file_obj:
+            doc_filename = f"{student_id}_{doc_key}_{file_obj.filename}"
+            doc_path = os.path.join("uploads", "documents", doc_filename)
+            with open(doc_path, "wb") as buffer:
+                shutil.copyfileobj(file_obj.file, buffer)
+            update_data[f"documents.{doc_key}"] = f"/uploads/documents/{doc_filename}"
         
     if update_data:
         students_collection.update_one(
@@ -371,7 +447,13 @@ def post_job(job: Job):
     from db import jobs_vector_collection
     
     # Store in MongoDB
-    result = jobs_collection.insert_one(job.dict())
+    job_dict = job.dict()
+    if job.address and job.address.pincode:
+        lat, lon = get_coordinates_from_pincode(job.address.pincode)
+        job_dict["latitude"] = lat
+        job_dict["longitude"] = lon
+        
+    result = jobs_collection.insert_one(job_dict)
     job_id = str(result.inserted_id)
     
     # Store in DB (DISABLED)
@@ -462,15 +544,24 @@ def get_recommendations(student_id: str):
 
     # Convert student profile to text for semantic search
     # Gather all trades and skills from education
-    student_trades = [e.get("trade", "") for e in student.get("education", [])]
+    student_trades = [e.get("trade") or "" for e in student.get("education", [])]
+    student_trades = [t for t in student_trades if t]
+    
     student_skills = []
     for e in student.get("education", []):
-        student_skills.extend(e.get("skills", []))
+        skills = e.get("skills")
+        if isinstance(skills, list):
+            student_skills.extend([s for s in skills if s])
     
     # Gather all experience details
-    experiences = [f"{exp.get('jobTitle')} at {exp.get('companyName')}: {exp.get('jobDescription')}" for exp in student.get("experience", [])]
+    experiences = []
+    for exp in student.get("experience", []):
+        title = exp.get("jobTitle") or ""
+        company = exp.get("companyName") or ""
+        desc = exp.get("jobDescription") or ""
+        experiences.append(f"{title} at {company}: {desc}")
     
-    student_text = f"Full Name: {student.get('fullName')}\nTrades: {', '.join(student_trades)}\nSkills: {', '.join(student_skills)}\nExperience: {' | '.join(experiences)}"
+    student_text = f"Full Name: {student.get('fullName') or ''}\nTrades: {', '.join(student_trades)}\nSkills: {', '.join(student_skills)}\nExperience: {' | '.join(experiences)}"
 
 
     # Query DB (Conditional Fallback)
@@ -488,53 +579,114 @@ def get_recommendations(student_id: str):
         else:
             results = {"ids": []}
         
-        temp_recs = []
+        final_results = []
         if results["ids"] and len(results["ids"][0]) > 0:
             for idx, job_id in enumerate(results["ids"][0]):
                 job = jobs_collection.find_one({"_id": ObjectId(job_id)})
                 if job:
                     # 2. Evaluate with Hybrid Skill Matching Approach (Exact + Semantic)
-                    final_score = calculate_job_match(student, job)
-                    trade = job.get("trade", "")
-                    company = job.get("company") or (trade.capitalize() + " Industry" if trade else "Unknown Company")
-                    temp_recs.append({
-                        "job_id": str(job["_id"]),
-                        "job_title": job.get("jobTitle", job.get("job_title", "Untitled")),
-                        "company": company,
-                        "trade": trade,
-                        "score": round(float(final_score), 2)
-                    })
+                    final_score, location_priority, distance_km = calculate_job_match(student, job, return_priority=True)
+                    final_results.append(
+                        (
+                            job,
+                            round(final_score, 2),
+                            location_priority,
+                            distance_km
+                        )
+                    )
             
-            # 3. Sort by our Hybrid Match Score and return Top 5
-            temp_recs.sort(key=lambda x: x["score"], reverse=True)
-            recommendations = temp_recs[:5]
+            # 3. Sort strictly by final score in descending order
+            final_results.sort(
+                key=lambda x: x[1],   # final score
+                reverse=True
+            )
+            
+            # Format and slice to top 5
+            for job, score, priority, distance_km in final_results[:5]:
+                trade = job.get("trade", "")
+                company = job.get("company") or (trade.capitalize() + " Industry" if trade else "Unknown Company")
+                recommendations.append({
+                    "job_id": str(job["_id"]),
+                    "job_title": job.get("jobTitle", job.get("job_title", "Untitled")),
+                    "company": company,
+                    "trade": trade,
+                    "score": score,
+                    "location_priority": priority,
+                    "distance_km": round(distance_km, 2) if distance_km is not None else None,
+                    "location": job.get("location") or job.get("address", {}).get("city") or "Remote",
+                    "experienceLevel": job.get("experienceLevel") or job.get("min_experience") or 0,
+                    "jobType": job.get("jobType") or "Full-time",
+                    "requiredSkills": job.get("requiredSkills") or [],
+                    "jobDescription": job.get("jobDescription") or job.get("description") or "",
+                    "salary": job.get("salary") or "Competitive",
+                    "employerId": job.get("employerId", ""),
+                    "address": job.get("address", {}),
+                    "locations": job.get("locations", []),
+                    "numberOfVacancies": job.get("numberOfVacancies", 1),
+                    "responsibilities": job.get("responsibilities", []),
+                    "preferredSkills": job.get("preferredSkills", []),
+                    "educationLevel": job.get("educationLevel", ""),
+                    "certifications": job.get("certifications", []),
+                    "experienceRequirements": job.get("experienceRequirements", ""),
+                    "benefits": job.get("benefits", []),
+                    "status": job.get("status", "active")
+                })
     else:
         # Fallback: Manual skill matching for all jobs
         all_jobs = list(jobs_collection.find())
-        temp_recs = []
+        final_results = []
         for job in all_jobs:
-            final_score = calculate_job_match(student, job)
+            final_score, location_priority, distance_km = calculate_job_match(student, job, return_priority=True)
+            final_results.append(
+                (
+                    job,
+                    round(final_score, 2),
+                    location_priority,
+                    distance_km
+                )
+            )
+        
+        # Sort strictly by final score in descending order
+        final_results.sort(
+            key=lambda x: x[1],   # final score
+            reverse=True
+        )
+        
+        # Format and slice to top 5
+        for job, score, priority, distance_km in final_results[:5]:
             trade = job.get("trade", "")
             company = job.get("company") or (trade.capitalize() + " Industry" if trade else "Unknown Company")
-            temp_recs.append({
+            recommendations.append({
                 "job_id": str(job["_id"]),
                 "job_title": job.get("jobTitle", job.get("job_title", "Untitled")),
                 "company": company,
                 "trade": trade,
-                "score": round(float(final_score), 2)
+                "score": score,
+                "location_priority": priority,
+                "distance_km": round(distance_km, 2) if distance_km is not None else None,
+                "location": job.get("location") or job.get("address", {}).get("city") or "Remote",
+                "experienceLevel": job.get("experienceLevel") or job.get("min_experience") or 0,
+                "jobType": job.get("jobType") or "Full-time",
+                "requiredSkills": job.get("requiredSkills") or [],
+                "jobDescription": job.get("jobDescription") or job.get("description") or "",
+                "salary": job.get("salary") or "Competitive",
+                "employerId": job.get("employerId", ""),
+                "address": job.get("address", {}),
+                "locations": job.get("locations", []),
+                "numberOfVacancies": job.get("numberOfVacancies", 1),
+                "responsibilities": job.get("responsibilities", []),
+                "preferredSkills": job.get("preferredSkills", []),
+                "educationLevel": job.get("educationLevel", ""),
+                "certifications": job.get("certifications", []),
+                "experienceRequirements": job.get("experienceRequirements", ""),
+                "benefits": job.get("benefits", []),
+                "status": job.get("status", "active")
             })
-        
-        # Sort and take top 5
-        temp_recs.sort(key=lambda x: x["score"], reverse=True)
-        recommendations = temp_recs[:5]
 
-    # Sort descending
-    recommendations.sort(key=lambda x: x["score"], reverse=True)
-
-    return {
+    return serialize_mongo({
         "student": student["fullName"],
         "recommendations": recommendations
-    }
+    })
 
 @app.post("/interview/start/{student_id}/{job_id}")
 def start_interview(student_id: str, job_id: str):
