@@ -199,8 +199,8 @@ def sync_chromadb():
 @app.post("/students/register")
 def register_student(student: Student):
     student_dict = student.dict()
-    if student.pinCode or student.city or student.state:
-        lat, lon = get_coordinates_from_pincode(student.pinCode, student.city, student.state)
+    if student.pinCode or student.city or student.state or student.area:
+        lat, lon = get_coordinates_from_pincode(student.pinCode, student.city, student.state, student.area)
         student_dict["latitude"] = lat
         student_dict["longitude"] = lon
     result = students_collection.insert_one(student_dict)
@@ -367,8 +367,8 @@ def update_student(student_id: str, data: StudentUpdate):
         "skills": data.skills
     }
     
-    if data.pinCode or data.city or data.state:
-        lat, lon = get_coordinates_from_pincode(data.pinCode, data.city, data.state)
+    if data.pinCode or data.city or data.state or data.area:
+        lat, lon = get_coordinates_from_pincode(data.pinCode, data.city, data.state, data.area)
         update_fields["latitude"] = lat
         update_fields["longitude"] = lon
         
@@ -448,8 +448,8 @@ def post_job(job: Job):
     
     # Store in MongoDB
     job_dict = job.dict()
-    if job.address and (job.address.pincode or job.address.city or job.address.state):
-        lat, lon = get_coordinates_from_pincode(job.address.pincode, job.address.city, job.address.state)
+    if job.address and (job.address.pincode or job.address.city or job.address.state or job.location):
+        lat, lon = get_coordinates_from_pincode(job.address.pincode, job.address.city, job.address.state, job.location)
         job_dict["latitude"] = lat
         job_dict["longitude"] = lon
         
