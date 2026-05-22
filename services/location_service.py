@@ -3,34 +3,57 @@ from geopy.distance import geodesic
 from typing import Tuple, Optional
 import time
 
-def get_coordinates_from_pincode(pincode: str) -> Tuple[Optional[float], Optional[float]]:
+def get_coordinates_from_pincode(pincode: str, city: Optional[str] = None, state: Optional[str] = None) -> Tuple[Optional[float], Optional[float]]:
     """
     Converts a pincode into latitude and longitude using OpenStreetMap Nominatim API.
     Enforces local geocoding bias by appending ', India'.
-    Handles invalid pincode, missing coordinates, API failure, and empty API response gracefully.
+    If pincode geocoding fails or is empty, falls back to City and State geocoding.
     """
-    if not pincode:
-        return None, None
-    
-    pincode_str = str(pincode).strip()
-    if not pincode_str:
+    if not pincode and not city and not state:
         return None, None
     
     try:
         # User agent is required by Nominatim terms of service
         geolocator = Nominatim(user_agent="ats_ai_pincode_locator")
         
-        # Append ', India' to bias the query locally to India
-        query = f"{pincode_str}, India"
-        
-        # Adding a timeout of 5 seconds to prevent hangs
-        location = geolocator.geocode(query, timeout=5)
-        
-        if location:
-            return float(location.latitude), float(location.longitude)
-        
+        # 1. Try Pincode first
+        if pincode:
+            pincode_str = str(pincode).strip()
+            if pincode_str:
+                query = f"{pincode_str}, India"
+                # Adding a timeout of 5 seconds to prevent hangs
+                location = geolocator.geocode(query, timeout=5)
+                if location:
+                    return float(location.latitude), float(location.longitude)
     except Exception as e:
-        print(f"Geocoding error for pincode {pincode_str}: {e}")
+        print(f"Geocoding error for pincode {pincode}: {e}")
+
+    # 2. Try City + State fallback
+    if city and state:
+        city_str = str(city).strip()
+        state_str = str(state).strip()
+        if city_str and state_str:
+            try:
+                geolocator = Nominatim(user_agent="ats_ai_pincode_locator")
+                query = f"{city_str}, {state_str}, India"
+                location = geolocator.geocode(query, timeout=5)
+                if location:
+                    return float(location.latitude), float(location.longitude)
+            except Exception as e:
+                print(f"Geocoding error for city/state fallback ({city_str}, {state_str}): {e}")
+
+    # 3. Try City only fallback
+    if city:
+        city_str = str(city).strip()
+        if city_str:
+            try:
+                geolocator = Nominatim(user_agent="ats_ai_pincode_locator")
+                query = f"{city_str}, India"
+                location = geolocator.geocode(query, timeout=5)
+                if location:
+                    return float(location.latitude), float(location.longitude)
+            except Exception as e:
+                print(f"Geocoding error for city fallback ({city_str}): {e}")
         
     return None, None
 
