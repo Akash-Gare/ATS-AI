@@ -139,13 +139,13 @@ def calculate_job_match(student, job, return_priority=False):
     location_score, location_priority, distance_km = get_location_match_and_priority(student, job)
     
     # Final Score formula under new specifications:
-    # final_score = (0.50 * semantic_score) + (0.25 * exact_match_score) + (0.10 * trade_match) + (0.10 * exp_score) + (0.05 * location_score)
+    # final_score = (0.50 * semantic_score) + (0.25 * exact_match_score) + (0.05 * trade_match) + (0.05 * exp_score) + (0.15 * location_score)
     final_score = (
         (0.50 * semantic_score) +
         (0.25 * exact_match_score) +
-        (0.10 * trade_match) +
-        (0.10 * exp_score) +
-        (0.05 * location_score)
+        (0.05 * trade_match) +
+        (0.05 * exp_score) +
+        (0.15 * location_score)
     )
     
     final_score_rounded = round(final_score, 2)
