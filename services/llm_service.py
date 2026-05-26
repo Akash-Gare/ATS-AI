@@ -14,16 +14,6 @@ client = OpenAI(
 )
 
 def generate_interview_questions(student, job):
-    # Safe extraction of nested student skills and trades
-    student_skills = []
-    for e in student.get("education", []):
-        student_skills.extend(e.get("skills", []))
-    if not student_skills:
-        student_skills = [e.get("trade", "") for e in student.get("education", [])]
-    
-    student_trades = [e.get("trade", "") for e in student.get("education", []) if e.get("trade")]
-    total_exp_roles = len(student.get("experience", []))
-    
     # Safe extraction of job mapped fields
     job_title = job.get("jobTitle", job.get("job_title", "General Worker"))
     job_desc = job.get("jobDescription", job.get("description", "No specific description available."))
@@ -31,63 +21,43 @@ def generate_interview_questions(student, job):
     job_trade = job.get("trade", "")
 
     # ---------- CACHING LOGIC ----------
-    # Normalize skills for consistent key generation
-    if isinstance(job_skills, list):
-        skills_for_key = sorted([s.lower().strip() for s in job_skills])
-    else:
-        skills_for_key = sorted([s.lower().strip() for s in str(job_skills).split(",") if s.strip()])
+    job_id_str = str(job["_id"])
     
-    cache_key = f"{job_trade.lower().strip()}_{'_'.join(skills_for_key)}"
-    
-    # Check cache hit
-    cached_entry = question_bank_collection.find_one({"key": cache_key})
+    # Check cache hit using job_id
+    cached_entry = question_bank_collection.find_one({"job_id": job_id_str})
     if cached_entry:
-        print(f"Cache Hit for key: {cache_key}")
+        print(f"Cache Hit for job_id: {job_id_str}")
         return json.dumps(cached_entry["questions"])
     # ----------------------------------
 
     prompt = f"""
 You are an expert technical interviewer.
 
-Your strict task is to generate exactly 5 Multiple Choice Questions (MCQs) based on short scenarios.
-EVERY SINGLE QUESTION (all 5) MUST BE A SHORT SCENARIO. No generic questions, no definitions.
+Your strict task is to generate exactly 15 Multiple Choice Questions (MCQs) based on short work-related scenarios.
+EVERY SINGLE QUESTION (all 15) MUST BE A SHORT SCENARIO. No generic questions, no definitions.
 
-To create these 5 scenario-based MCQs:
-1. Cross-reference the "Student's Skills" with the "Job's Required Skills" to find overlapping/matching skills.
-2. For each question, invent a TINY scenario (1-2 sentences MAXIMUM) about a problem at work related to the "Job Title" and "Job Description".
-3. Immediately ask how the candidate would use their matching skill to solve it.
-4. Provide exactly 4 options for each question (labeled A, B, C, D or just the strings).
-5. Identify the correct answer.
+To create these 15 scenario-based MCQs:
+1. For each question, invent a TINY scenario (1-2 sentences MAXIMUM) about a problem or situation at work related to the Job Title, Job Description, Required Skills, and Trade.
+2. Immediately ask how a candidate would solve it using technical knowledge or required skills.
+3. Provide exactly 4 options for each question (Option A, Option B, Option C, Option D).
+4. Identify the correct answer (it must match exactly one of the options).
 
 Keep the question text concise!
 Example format:
-"Our main database is experiencing high latency during peak hours. How would you use Redis to resolve this bottleneck?"
-Options: ["Implement write-through caching", "Use Redis as a primary database", "Create a read-only replica in Redis", "Flush all keys on every request"]
-Correct Answer: "Implement write-through caching"
+{{
+  "question": "Our main database is experiencing high latency during peak hours. How would you use Redis to resolve this bottleneck?",
+  "options": ["Option A", "Option B", "Option C", "Option D"],
+  "correct_answer": "Option A"
+}}
 
 STRICT RULES:
-- Return ONLY valid JSON.
+- Return ONLY a valid JSON array containing exactly 15 questions.
 - No explanation.
 - No markdown.
 - No extra text.
 - No ```json blocks.
 
-Format:
-
-[
-  {{
-    "question": "...",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-    "correct_answer": "Option 1"
-  }}
-]
-
-Student:
-Trade: {', '.join(student_trades)}
-Skills: {', '.join(student_skills)}
-Experience: {total_exp_roles} roles
-
-Job:
+Job Details:
 Title: {job_title}
 Trade: {job_trade}
 Description: {job_desc}
@@ -114,9 +84,11 @@ Required Skills: {', '.join(job_skills) if isinstance(job_skills, list) else job
     try:
         questions_list = json.loads(content)
         question_bank_collection.update_one(
-            {"key": cache_key},
+            {"job_id": job_id_str},
             {
                 "$set": {
+                    "key": job_id_str,  # Compatible with the unique index in db.py
+                    "job_id": job_id_str,
                     "questions": questions_list,
                     "trade": job_trade,
                     "skills": job_skills,
@@ -125,9 +97,9 @@ Required Skills: {', '.join(job_skills) if isinstance(job_skills, list) else job
             },
             upsert=True
         )
-        print(f"Cached questions for key: {cache_key}")
+        print(f"Cached 15 questions for job_id: {job_id_str}")
     except Exception as e:
-        print(f"Failed to cache questions for key {cache_key}: {e}")
+        print(f"Failed to cache questions for job_id {job_id_str}: {e}")
     # -----------------------------------
 
     return content

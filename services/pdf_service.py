@@ -63,7 +63,8 @@ def generate_interview_report(result_data, interview_data, student_name, job_tit
         elements.append(Paragraph(f"Question {i+1}: {ans['question']}", styles['Heading3']))
         
         # Options List
-        options_html = "<br/>".join([f"&bull; {opt}" for opt in orig_q['options']])
+        option_letters = ["A", "B", "C", "D", "E", "F"]
+        options_html = "<br/>".join([f"<b>Option {option_letters[idx]}:</b> {opt}" for idx, opt in enumerate(orig_q['options'])])
         elements.append(Paragraph(f"<b>Options:</b><br/>{options_html}", normal_style))
         elements.append(Spacer(1, 6))
         

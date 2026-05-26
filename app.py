@@ -500,6 +500,7 @@ def get_jobs():
 
 @app.post("/jobs/apply/{student_id}/{job_id}")
 def apply_job(student_id: str, job_id: str):
+    from fastapi.responses import JSONResponse
     import datetime
     if not ObjectId.is_valid(student_id) or not ObjectId.is_valid(job_id):
         raise HTTPException(status_code=400, detail="Invalid ID format")
@@ -510,19 +511,47 @@ def apply_job(student_id: str, job_id: str):
     if not student or not job:
         raise HTTPException(status_code=404, detail="Student or Job not found")
 
-    application = {
-        "student_id": student_id,
-        "job_id": job_id,
-        "application_status": "applied",
-        "applied_date": datetime.datetime.now().strftime("%Y-%m-%d")
-    }
+    # Check existing application count
+    app_doc = applications_collection.find_one({"student_id": student_id, "job_id": job_id})
+    apply_count = app_doc.get("apply_count", 0) if app_doc else 0
+    if apply_count >= 2:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "Maximum apply attempts reached"}
+        )
 
-    result = applications_collection.insert_one(application)
+    # Upsert application to increment apply_count
+    applications_collection.update_one(
+        {"student_id": student_id, "job_id": job_id},
+        {
+            "$inc": {"apply_count": 1},
+            "$set": {
+                "application_status": "applied",
+                "applied_date": datetime.datetime.now().strftime("%Y-%m-%d")
+            }
+        },
+        upsert=True
+    )
+
+    # Fetch updated application to return its _id
+    updated_app = applications_collection.find_one({"student_id": student_id, "job_id": job_id})
 
     return {
         "message": "Application submitted successfully",
-        "application_id": str(result.inserted_id)
+        "application_id": str(updated_app["_id"])
     }
+
+@app.get("/students/{student_id}/applications")
+def get_student_applications(student_id: str):
+    if not ObjectId.is_valid(student_id):
+        raise HTTPException(status_code=400, detail="Invalid student id")
+    
+    student = students_collection.find_one({"_id": ObjectId(student_id)})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    apps = list(applications_collection.find({"student_id": student_id}))
+    return serialize_mongo(apps)
 
 @app.get("/recommend/{student_id}")
 def get_recommendations(student_id: str):
@@ -690,6 +719,13 @@ def get_recommendations(student_id: str):
 
 @app.post("/interview/start/{student_id}/{job_id}")
 def start_interview(student_id: str, job_id: str):
+    from fastapi.responses import JSONResponse
+    import datetime
+    import random
+    import json
+
+    if not ObjectId.is_valid(student_id) or not ObjectId.is_valid(job_id):
+        raise HTTPException(status_code=400, detail="Invalid ID format")
 
     student = students_collection.find_one({"_id": ObjectId(student_id)})
     job = jobs_collection.find_one({"_id": ObjectId(job_id)})
@@ -697,16 +733,43 @@ def start_interview(student_id: str, job_id: str):
     if not student or not job:
         raise HTTPException(status_code=404, detail="Student or Job not found")
 
-    # Generate questions from Groq
+    # Check existing application count
+    app_doc = applications_collection.find_one({"student_id": student_id, "job_id": job_id})
+    apply_count = app_doc.get("apply_count", 0) if app_doc else 0
+    if apply_count >= 2:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "Maximum apply attempts reached"}
+        )
+
+    # Upsert application to increment apply_count
+    applications_collection.update_one(
+        {"student_id": student_id, "job_id": job_id},
+        {
+            "$inc": {"apply_count": 1},
+            "$set": {
+                "application_status": "applied",
+                "applied_date": datetime.datetime.now().strftime("%Y-%m-%d")
+            }
+        },
+        upsert=True
+    )
+
+    # Generate or reuse 15 questions from the question bank
     llm_output = generate_interview_questions(student, job)
 
-    import json
-
     try:
-        questions = json.loads(llm_output)
+        all_questions = json.loads(llm_output)
     except Exception as e:
         print("LLM RAW OUTPUT:", llm_output)
         raise HTTPException(status_code=500, detail="LLM returned invalid JSON")
+
+    if not isinstance(all_questions, list) or len(all_questions) == 0:
+        raise HTTPException(status_code=500, detail="No interview questions available")
+
+    # Randomly select ONLY 5 questions
+    num_to_sample = min(5, len(all_questions))
+    selected_questions = random.sample(all_questions, num_to_sample)
 
     # Store in new interview_questions collection
     interview_questions_data = {
@@ -718,14 +781,15 @@ def start_interview(student_id: str, job_id: str):
                 "options": q["options"],
                 "correct_answer": q["correct_answer"]
             }
-            for q in questions
+            for q in selected_questions
         ],
-        "created_at": datetime.utcnow()
+        "created_at": datetime.datetime.utcnow()
     }
     
     q_result = interview_questions_collection.insert_one(interview_questions_data)
     interview_id = str(q_result.inserted_id)
 
+    # Return only those 5 questions (without correct_answer) to frontend
     return {
         "interview_id": interview_id,
         "questions": [
@@ -733,7 +797,7 @@ def start_interview(student_id: str, job_id: str):
                 "question": q["question"],
                 "options": q["options"]
             }
-            for q in questions
+            for q in selected_questions
         ]
     }
 
@@ -785,7 +849,56 @@ def submit_interview(interview_id: str, submission: InterviewSubmission):
     scored_answers = []
     for i, ans in enumerate(submission.answers):
         stored_q = interview["questions"][i]
-        is_correct = ans.answer.strip().lower() == stored_q["correct_answer"].strip().lower()
+        
+        # Robust comparison for MCQ answers:
+        # Handles option letters (e.g. "Option A", "A"), option text, or direct match.
+        is_correct = False
+        student_ans_clean = ans.answer.strip().lower()
+        correct_ans_clean = stored_q["correct_answer"].strip().lower()
+        options = stored_q.get("options", [])
+        
+        # 1. Direct text match
+        if student_ans_clean == correct_ans_clean:
+            is_correct = True
+        else:
+            # 2. Check if correct_answer represents an option index/letter (e.g. "Option A", "A")
+            letter = None
+            if correct_ans_clean in ['a', 'b', 'c', 'd']:
+                letter = correct_ans_clean
+            elif correct_ans_clean.startswith('option'):
+                rem = correct_ans_clean[6:].strip(" :-")
+                if rem and rem[0] in ['a', 'b', 'c', 'd']:
+                    letter = rem[0]
+            
+            if letter is not None:
+                idx = ord(letter) - ord('a')
+                if 0 <= idx < len(options):
+                    if student_ans_clean == options[idx].strip().lower():
+                        is_correct = True
+            
+            # 3. Fallback: if student's answer text matches option text that matches correct_answer
+            if not is_correct:
+                for idx, opt in enumerate(options):
+                    opt_clean = opt.strip().lower()
+                    if opt_clean and (opt_clean in correct_ans_clean or correct_ans_clean in opt_clean):
+                        if student_ans_clean == opt_clean:
+                            is_correct = True
+                            break
+
+        # Make display-friendly correct answer string for the report (e.g. "Option A (Check for overloaded circuits)")
+        correct_answer_display = stored_q["correct_answer"]
+        letter = None
+        if correct_ans_clean in ['a', 'b', 'c', 'd']:
+            letter = correct_ans_clean
+        elif correct_ans_clean.startswith('option'):
+            rem = correct_ans_clean[6:].strip(" :-")
+            if rem and rem[0] in ['a', 'b', 'c', 'd']:
+                letter = rem[0]
+        
+        if letter is not None:
+            idx = ord(letter) - ord('a')
+            if 0 <= idx < len(options):
+                correct_answer_display = f"{stored_q['correct_answer']} ({options[idx]})"
         
         if is_correct:
             total_correct += 1
@@ -793,7 +906,7 @@ def submit_interview(interview_id: str, submission: InterviewSubmission):
         scored_answers.append({
             "question": stored_q["question"],
             "student_answer": ans.answer,
-            "correct_answer": stored_q["correct_answer"],
+            "correct_answer": correct_answer_display,
             "is_correct": is_correct
         })
 
