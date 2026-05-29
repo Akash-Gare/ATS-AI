@@ -54,7 +54,7 @@ applications_collection = db["applications"]
 question_bank_collection = db["question_bank"]
 
 # Create indexes
-question_bank_collection.create_index("key", unique=True)
+interviews_collection.create_index("type")
 
 
 # ENABLING CHROMADB
