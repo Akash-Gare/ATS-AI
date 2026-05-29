@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import re
 import json
 from datetime import datetime
-from db import question_bank_collection
+from db import question_bank_collection, interviews_collection
 
 load_dotenv()
 
@@ -14,22 +14,22 @@ client = OpenAI(
 )
 
 def generate_interview_questions(student, job):
-    # Safe extraction of job mapped fields
+    # Extract job details
     job_title = job.get("jobTitle", job.get("job_title", "General Worker"))
     job_desc = job.get("jobDescription", job.get("description", "No specific description available."))
     job_skills = job.get("requiredSkills", job.get("required_skills", []))
     job_trade = job.get("trade", "")
 
-    # ---------- CACHING LOGIC ----------
+    # Use job_id string as cache key
     job_id_str = str(job["_id"])
-    
-    # Check cache hit using job_id
-    cached_entry = question_bank_collection.find_one({"job_id": job_id_str})
-    if cached_entry:
-        print(f"Cache Hit for job_id: {job_id_str}")
-        return json.dumps(cached_entry["questions"])
-    # ----------------------------------
 
+    # Check if MCQ bank already exists in interviews collection
+    cached = interviews_collection.find_one({"type": "job_mcq_bank", "job_id": job_id_str})
+    if cached:
+        print(f"Cache Hit for MCQ bank job_id: {job_id_str}")
+        return json.dumps(cached["questions"])
+
+    # Build prompt for LLM to generate 15 MCQs
     prompt = f"""
 You are an expert technical interviewer.
 
@@ -72,7 +72,7 @@ Required Skills: {', '.join(job_skills) if isinstance(job_skills, list) else job
 
     content = response.choices[0].message.content.strip()
 
-    # Safety cleanup: extract JSON array
+    # Extract JSON array
     match = re.search(r'\[.*\]', content, re.DOTALL)
     if match:
         content = match.group(0)
@@ -80,63 +80,21 @@ Required Skills: {', '.join(job_skills) if isinstance(job_skills, list) else job
         if content.startswith("```"):
             content = content.replace("```json", "").replace("```", "").strip()
 
-    # ---------- STORE IN CACHE ----------
+    # ---------- STORE MCQ BANK IN INTERVIEWS ----------
     try:
         questions_list = json.loads(content)
-        question_bank_collection.update_one(
-            {"job_id": job_id_str},
-            {
-                "$set": {
-                    "key": job_id_str,  # Compatible with the unique index in db.py
-                    "job_id": job_id_str,
-                    "questions": questions_list,
-                    "trade": job_trade,
-                    "skills": job_skills,
-                    "created_at": datetime.utcnow()
-                }
-            },
-            upsert=True
-        )
-        print(f"Cached 15 questions for job_id: {job_id_str}")
+        interviews_collection.insert_one({
+            "type": "job_mcq_bank",
+            "job_id": job_id_str,
+            "questions": questions_list,
+            "created_at": datetime.utcnow()
+        })
+        print(f"Inserted MCQ bank for job_id: {job_id_str}")
     except Exception as e:
-        print(f"Failed to cache questions for job_id {job_id_str}: {e}")
+        print(f"Failed to store MCQ bank for job_id {job_id_str}: {e}")
     # -----------------------------------
 
     return content
 
-def evaluate_answer(question, ideal_answer, user_answer):
-    prompt = f"""You are a technical interview evaluator.
-
-Question:
-{question}
-
-Ideal Answer:
-{ideal_answer}
-
-Student Answer:
-{user_answer}
-
-Evaluate the student's answer based on:
-1. correctness
-2. completeness
-3. technical accuracy
-
-Give a score from 0 to 10.
-Return only the score
-"""
-
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
-    )
-
-    content = response.choices[0].message.content.strip()
-
-    match = re.search(r'\b(10(?:\.0+)?|\d(?:\.\d+)?)\b', content)
-    if match:
-        score = float(match.group(1)) * 10.0 # scale from 0-10 to 0-100
-    else:
-        score = 0.0
-
-    return score
+# NOTE: `evaluate_answer` was removed because the project no longer uses LLM‑based free‑text answer grading.
+# MCQ scoring is performed with direct string matching in app.py, so this function was dead code and caused unnecessary token usage.
