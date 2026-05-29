@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from services.llm_service import generate_interview_questions, evaluate_answer
+from services.llm_service import generate_interview_questions
 from services.pdf_service import generate_interview_report
 from fastapi import HTTPException, File, UploadFile, Form
 from pydantic import BaseModel
@@ -755,18 +755,21 @@ def start_interview(student_id: str, job_id: str):
         upsert=True
     )
 
-    # Generate or reuse 15 questions from the question bank
-    llm_output = generate_interview_questions(student, job)
-
-    try:
-        all_questions = json.loads(llm_output)
-    except Exception as e:
-        print("LLM RAW OUTPUT:", llm_output)
-        raise HTTPException(status_code=500, detail="LLM returned invalid JSON")
-
+    # Retrieve MCQ bank for the job (reuse if exists)
+    job_id_str = str(job["_id"])  # Ensure string for lookup
+    mcq_bank_doc = interviews_collection.find_one({"type": "job_mcq_bank", "job_id": job_id_str})
+    if mcq_bank_doc:
+        all_questions = mcq_bank_doc["questions"]
+    else:
+        # Generate and store 15 questions via LLM
+        llm_output = generate_interview_questions(student, job)
+        try:
+            all_questions = json.loads(llm_output)
+        except Exception as e:
+            print("LLM RAW OUTPUT:", llm_output)
+            raise HTTPException(status_code=500, detail="LLM returned invalid JSON")
     if not isinstance(all_questions, list) or len(all_questions) == 0:
         raise HTTPException(status_code=500, detail="No interview questions available")
-
     # Randomly select ONLY 5 questions
     num_to_sample = min(5, len(all_questions))
     selected_questions = random.sample(all_questions, num_to_sample)
