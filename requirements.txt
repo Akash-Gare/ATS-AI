@@ -3,6 +3,8 @@ uvicorn
 pymongo
 scikit-learn 
 openai 
+chromadb
+sentence-transformers
 python-dotenv
 geopy
 reportlab
