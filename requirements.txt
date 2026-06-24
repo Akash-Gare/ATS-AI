@@ -4,8 +4,6 @@ pymongo
 scikit-learn 
 openai 
 python-dotenv
-chromadb
-sentence-transformers
 geopy
 reportlab
 python-multipart
