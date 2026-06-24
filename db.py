@@ -58,5 +58,7 @@ interviews_collection.create_index("type")
 
 
 # ENABLING CHROMADB
-chroma_client = chromadb.PersistentClient(path="./chroma_db_new")
-jobs_vector_collection = chroma_client.get_or_create_collection(name="jobs_collection")
+#chroma_client = chromadb.PersistentClient(path="./chroma_db_new")
+#jobs_vector_collection = chroma_client.get_or_create_collection(name="jobs_collection")
+# TEMPORARILY DISABLE CHROMADB FOR RENDER FREE PLAN
+jobs_vector_collection = None
