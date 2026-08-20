@@ -43,7 +43,7 @@ if "localhost" in MONGO_URI or "127.0.0.1" in MONGO_URI:
 
 # Database connection
 client = MongoClient(MONGO_URI)
-db = client["test"] # Switched to production DB name found in Atlas search
+db = client["ats_ai"] # Switched to new ats_ai database
 
 students_collection = db["candidateprofiles"] # Correct production candidate collection
 jobs_collection = db["jobposts"] # Correct production job collection
